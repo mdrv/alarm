@@ -9,41 +9,38 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/menci/archlinuxarm:base-devel
-      platforms: linux/arm64
     steps:
     - uses: actions/checkout@v4
 
-    - name: Initialize pacman and update system
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - name: Build packages in Arch Linux ARM container
       run: |
-        pacman-key --init
-        pacman-key --populate archlinuxarm
-        pacman -Syu --noconfirm
-
-    - name: Build all aarch64 packages
-      run: |
-        mkdir -p aarch64
-        export PACKAGER="mdrv <mdrv@users.noreply.github.com>"
-        cd packages
-
-        for pkgdir in */; do
-          echo "::group::Building $pkgdir"
-          cd "$pkgdir"
-
-          makepkg --sign --needed --noconfirm -f
-          mv *.pkg.tar.zst *.pkg.tar.zst.sig ../../aarch64/ 2>/dev/null || echo "No packages built for $pkgdir"
-          cd ..
-          echo "::endgroup::"
-        done
-
-        cd ../aarch64
-        if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
-          repo-add --sign --verify alarm.db.tar.gz *.pkg.tar.zst
-        else
-          echo "No packages to add to repo"
-          touch alarm.db.tar.gz
-        fi
+        docker run --rm --platform linux/arm64 \
+          -v ${{ github.workspace }}:/work \
+          ghcr.io/menci/archlinuxarm:base-devel \
+          bash -c "
+            cd /work &&
+            mkdir -p aarch64 &&
+            export PACKAGER='mdrv <mdrv@users.noreply.github.com>' &&
+            cd packages &&
+            for pkgdir in */; do
+              echo \"::group::Building \$pkgdir\" &&
+              cd \"\$pkgdir\" &&
+              makepkg --sign --needed --noconfirm -f &&
+              mv *.pkg.tar.zst *.pkg.tar.zst.sig ../../aarch64/ 2>/dev/null || echo \"No packages built for \$pkgdir\" &&
+              cd .. &&
+              echo \"::endgroup::\"
+            done &&
+            cd ../aarch64 &&
+            if [ -n \"\$(ls *.pkg.tar.zst 2>/dev/null)\" ]; then
+              repo-add --sign --verify alarm.db.tar.gz *.pkg.tar.zst
+            else
+              echo \"No packages to add to repo\" &&
+              touch alarm.db.tar.gz
+            fi
+          "
 
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
