@@ -8,15 +8,30 @@ PACKAGES_DIR="/home/builder/packages"
 BUILDER_UID="1000"
 BUILDER_GID="1000"
 
+# Official Arch Linux ARM Build System key
+ARCH_ARM_KEY="68B3537F39A313B3E574D06777193F152BDBE6A6"
+
 # Create builder user
 echo "Setting up builder user..."
 useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 
-# Initialize pacman (required for makepkg dependency checks)
-echo "Initializing pacman..."
+# Configure makepkg (disable landlock, setup signing)
+echo "Configuring makepkg..."
+cat > /etc/makepkg.conf <<EOF
+BUILDENV=(!landlock)
+PACKAGER="${PACKAGER}"
+GPGKEY="${ARCH_ARM_KEY}"
+EOF
+
+# Import official Arch Linux ARM Build System key for signing
+echo "Importing Arch Linux ARM Build System key..."
 pacman-key --init
 pacman-key --populate archlinuxarm
+
+# Initialize pacman and install build dependencies
+echo "Initializing pacman and installing dependencies..."
 pacman -Sy --noconfirm
+pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
 # Prepare packages directory
 echo "Preparing packages directory..."
@@ -47,11 +62,11 @@ mkdir -p "${OUTPUT_DIR}/aarch64"
 find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" -exec cp {} "${OUTPUT_DIR}/aarch64/" \;
 find "${PACKAGES_DIR}" -name "*.pkg.tar.zst.sig" -exec cp {} "${OUTPUT_DIR}/aarch64/" \;
 
-# Create repository database
+# Create repository database (verify signatures, don't re-sign)
 echo "Creating repository database..."
 cd "${OUTPUT_DIR}/aarch64"
 if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
-  repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst
+  repo-add --verify mdrv.db.tar.gz *.pkg.tar.zst
 else
   echo "No packages built, creating empty database files"
   touch mdrv.db.tar.gz
