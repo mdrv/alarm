@@ -27,22 +27,26 @@ jobs:
             cd /work &&
             mkdir -p aarch64 &&
             export PACKAGER='mdrv <mdrv@users.noreply.github.com>' &&
+            useradd -m builder &&
+            chown -R builder:builder /work &&
             cd packages &&
-            for pkgdir in */; do
-              echo \"::group::Building \$pkgdir\" &&
-              cd \"\$pkgdir\" &&
-              makepkg --sign --needed --noconfirm -f &&
-              mv *.pkg.tar.zst *.pkg.tar.zst.sig ../../aarch64/ 2>/dev/null || echo \"No packages built for \$pkgdir\" &&
-              cd .. &&
-              echo \"::endgroup::\"
-            done &&
-            cd ../aarch64 &&
-            if [ -n \"\$(ls *.pkg.tar.zst 2>/dev/null)\" ]; then
-              repo-add --sign --verify alarm.db.tar.gz *.pkg.tar.zst
-            else
-              echo \"No packages to add to repo\" &&
-              touch alarm.db.tar.gz
-            fi
+            su builder -c \"
+              for pkgdir in */; do
+                echo \\\"::group::Building \\\$pkgdir\\\" &&
+                cd \\\$pkgdir &&
+                makepkg --sign --needed --noconfirm -f &&
+                mv *.pkg.tar.zst *.pkg.tar.zst.sig ../../aarch64/ 2>/dev/null || echo \\\"No packages built for \\\$pkgdir\\\" &&
+                cd .. &&
+                echo \\\"::endgroup::\\\"
+              done &&
+              cd ../aarch64 &&
+              if [ -n \\\"\\\$(ls *.pkg.tar.zst 2>/dev/null)\\\" ]; then
+                repo-add --sign --verify alarm.db.tar.gz *.pkg.tar.zst
+              else
+                echo \\\"No packages to add to repo\\\" &&
+                touch alarm.db.tar.gz
+              fi
+            \"
           "
 
     - name: Deploy to GitHub Pages
