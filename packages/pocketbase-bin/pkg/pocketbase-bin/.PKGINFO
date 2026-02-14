@@ -6,7 +6,7 @@ xdata = pkgtype=pkg
 pkgver = 0.36.3-1
 pkgdesc = Open source backend for your next project in 1 file
 url = https://pocketbase.io
-builddate = 1771078807
+builddate = 1771079081
 packager = mdrv <mdrv@users.noreply.github.com>
 size = 31507898
 arch = aarch64
