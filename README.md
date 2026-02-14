@@ -8,12 +8,9 @@ Add to `/etc/pacman.conf`:
 
 ```ini
 [mdrv]
-SigLevel = Required DatabaseOptional
-LocalFileSigLevel = Optional
+SigLevel = Optional TrustAll
 Server = https://mdrv.github.io/alarm/aarch64
 ```
-
-**Important:** The repository packages are signed by the official Arch Linux ARM Build System key (68B3537F39A313B3E574D06777193F152BDBE6A6).
 
 Then update and install:
 
@@ -26,24 +23,15 @@ sudo pacman -S mdrv/tofi
 
 ## Available Packages
 
-- **bun** - Fast JavaScript runtime, bundler, test runner, and package manager
+- **bun** - Fast JavaScript runtime, bundler, test runner, and package manager (prebuilt binary from official releases)
 - **pocketbase-bin** - Open source backend for your next project in 1 file
 - **tofi** - Tiny rofi / dmenu replacement for wlroots-based Wayland compositors
 
 ## Package Signing
 
-All packages are signed using the official Arch Linux ARM Build System key:
+Packages are **unsigned** for simplicity. This is standard practice for personal repositories.
 
-```
-Key ID: 68B3537F39A313B3E574D06777193F152BDBE6A6
-Owner: Arch Linux ARM Build System
-```
-
-To verify package signatures, ensure the Arch Linux ARM keyring is installed:
-
-```bash
-sudo pacman -S archlinuxarm-keyring
-```
+Set `SigLevel = Optional TrustAll` in `/etc/pacman.conf` to disable signature verification.
 
 ## Building
 

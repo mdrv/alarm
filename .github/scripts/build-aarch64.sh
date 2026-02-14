@@ -8,35 +8,28 @@ PACKAGES_DIR="/home/builder/packages"
 BUILDER_UID="1000"
 BUILDER_GID="1000"
 
-# Official Arch Linux ARM Build System key
-ARCH_ARM_KEY="68B3537F39A313B3E574D06777193F152BDBE6A6"
-
 # Create builder user
 echo "Setting up builder user..."
 useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 
-# Configure makepkg (disable landlock via environment variable)
-echo "Configuring makepkg..."
-export BUILDENV="!landlock"
-export PACKAGER="$PACKAGER"
-export GPGKEY="$ARCH_ARM_KEY"
-
-# Import official Arch Linux ARM Build System key for signing
-echo "Importing Arch Linux ARM Build System key..."
+# Import official Arch Linux ARM keyring (required for package builds)
+echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
 pacman-key --populate archlinuxarm
 
-# Initialize pacman and install build dependencies
+# Initialize pacman and install build dependencies (run as builder user)
 echo "Initializing pacman and installing dependencies..."
-pacman -Sy --noconfirm
-pacman -S --noconfirm --needed meson scdoc wayland-protocols
+pacman -Syu --noconfirm
+su builder -lc "
+  pacman -S --noconfirm --needed meson scdoc wayland-protocols
+"
 
 # Prepare packages directory
 echo "Preparing packages directory..."
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
-# Build packages
+# Build packages (run as builder user to access pacman DB)
 echo "Building packages..."
 cd "${PACKAGES_DIR}"
 BUILD_FAILED=0
@@ -45,7 +38,7 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  if ! sudo -u builder makepkg --sign --needed --noconfirm -f; then
+  if ! sudo -u builder makepkg --needed --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
@@ -58,13 +51,12 @@ done
 echo "Preparing output directory..."
 mkdir -p "${OUTPUT_DIR}/aarch64"
 find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" -exec cp {} "${OUTPUT_DIR}/aarch64/" \;
-find "${PACKAGES_DIR}" -name "*.pkg.tar.zst.sig" -exec cp {} "${OUTPUT_DIR}/aarch64/" \;
 
-# Create repository database (verify signatures, don't re-sign)
+# Create repository database (unsigned, users can set SigLevel)
 echo "Creating repository database..."
 cd "${OUTPUT_DIR}/aarch64"
 if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
-  repo-add --verify mdrv.db.tar.gz *.pkg.tar.zst
+  repo-add mdrv.db.tar.gz *.pkg.tar.zst
 else
   echo "No packages built, creating empty database files"
   touch mdrv.db.tar.gz
