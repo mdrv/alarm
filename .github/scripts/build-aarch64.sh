@@ -43,7 +43,7 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  if ! sudo -u builder makepkg --needed --noconfirm -f; then
+  if ! sudo -u builder makepkg --needed --syncdeps --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
