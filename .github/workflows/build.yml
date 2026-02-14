@@ -10,7 +10,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: menci/archlinuxarm:aarch64
+      image: ghcr.io/menci/archlinuxarm:base-devel
+      platforms: linux/arm64
     steps:
     - uses: actions/checkout@v4
 
