@@ -21,33 +21,14 @@ jobs:
     - name: Build packages in Arch Linux ARM container
       run: |
         docker run --rm --platform linux/arm64 \
-          -v ${{ github.workspace }}:/work \
+          -v ${{ github.workspace }}:/output \
           ghcr.io/menci/archlinuxarm:base-devel \
-          bash -c "
-            cd /work &&
-            mkdir -p aarch64 &&
-            export PACKAGER='mdrv <mdrv@users.noreply.github.com>' &&
-            useradd -m builder &&
-            chown -R builder:builder /work &&
-            cd packages &&
-            su builder -c \"
-              for pkgdir in */; do
-                echo \\\"::group::Building \\\$pkgdir\\\" &&
-                cd \\\$pkgdir &&
-                makepkg --sign --needed --noconfirm -f &&
-                mv *.pkg.tar.zst *.pkg.tar.zst.sig ../../aarch64/ 2>/dev/null || echo \\\"No packages built for \\\$pkgdir\\\" &&
-                cd .. &&
-                echo \\\"::endgroup::\\\"
-              done &&
-              cd ../aarch64 &&
-              if [ -n \\\"\\\$(ls *.pkg.tar.zst 2>/dev/null)\\\" ]; then
-                repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst
-              else
-                echo \\\"No packages to add to repo\\\" &&
-                touch mdrv.db.tar.gz
-              fi
-            \"
-          "
+          bash -c "export PACKAGER='mdrv <mdrv@users.noreply.github.com>' && useradd -m builder && cp -r /output/packages /home/builder/ && cd /home/builder/packages && for pkgdir in */; do echo '::group::Building \$pkgdir' && cd \"\$pkgdir\" && makepkg --sign --needed --noconfirm -f || true && cd .. && echo '::endgroup::' && mkdir -p /output/aarch64 && find /home/builder/packages -name '*.pkg.tar.zst' -exec cp {} /output/aarch64/ \\; && find /home/builder/packages -name '*.pkg.tar.zst.sig' -exec cp {} /output/aarch64/ \\; && cd /output/aarch64 && if [ -n \"\$(ls *.pkg.tar.zst 2>/dev/null)\" ]; then repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst; else touch mdrv.db.tar.gz; fi"
+
+    - name: Generate index.html
+      run: |
+        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        sed "s/BUILD_DATE/$BUILD_DATE/" index.html.template > aarch64/index.html
 
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
@@ -56,5 +37,10 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./
         publish_branch: gh-pages
+        exclude_files: |
+          .git
+          packages
+          .github
+          index.html.template
         user_name: 'github-actions[bot]'
         user_email: '41898282+github-actions[bot]@users.noreply.github.com'
