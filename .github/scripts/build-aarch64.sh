@@ -9,7 +9,7 @@ ARCH_DIR="${OUTPUT_DIR}/aarch64"
 
 # Get host UID/GID for proper file ownership
 HOST_UID="${HOST_UID:-1001}"
-HOST_GID="${HOST_GID:-121}"
+HOST_GID="${HOST_GID:-1001}"
 
 echo "Host UID: ${HOST_UID}, Host GID: ${HOST_GID}"
 
@@ -45,6 +45,10 @@ sudo -u builder -H bash -c "cat > /home/builder/.makepkg.conf <<'EOF'
 PKGDEST=\"${ARCH_DIR}\"
 EOF"
 
+# Verify config was created
+echo "Verifying .makepkg.conf contents:"
+sudo -u builder -H bash -c "cat /home/builder/.makepkg.conf"
+
 # Prepare directories
 echo "Preparing directories..."
 mkdir -p "${ARCH_DIR}"
@@ -61,6 +65,10 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
+  # Check PKGDEST before building
+  echo "PKGDEST before build:"
+  sudo -u builder -H bash -c "echo \"PKGDEST=\$PKGDEST\""
+
   if ! sudo -u builder -H makepkg --needed --syncdeps --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
@@ -70,6 +78,14 @@ for pkgdir in */; do
   echo "::endgroup::"
 done
 
+# Check if packages are in aarch64 directory
+echo "Checking ${ARCH_DIR} for packages:"
+ls -la "${ARCH_DIR}" || echo "Directory empty or doesn't exist"
+
+# Check if packages are in package dirs
+echo "Checking package directories:"
+find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" 2>/dev/null || echo "No packages found in package dirs"
+
 # Create repository database (in same directory as packages)
 echo "Creating repository database..."
 cd "${ARCH_DIR}"
@@ -77,8 +93,6 @@ if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
   repo-add -R mdrv.db.tar.gz ./*.pkg.tar.zst
 else
   echo "No packages found to build database"
-  echo "Checking for packages in package dirs:"
-  find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" 2>/dev/null || echo "No packages found"
 fi
 
 # Generate index for aarch64/ directory
