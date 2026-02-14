@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Configuration
-PACKAGER="mdrv <mdrv@users.noreply.github.com>"
+PACKAGER='mdrv <mdrv@users.noreply.github.com>'
 OUTPUT_DIR="/work"
 PACKAGES_DIR="/home/builder/packages"
 BUILDER_UID="1000"
@@ -18,15 +18,8 @@ useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 # Configure makepkg (disable landlock via environment variable)
 echo "Configuring makepkg..."
 export BUILDENV="!landlock"
-export PACKAGER="${PACKAGER}"
-export GPGKEY="${ARCH_ARM_KEY}"
-
-# Also try setting in makepkg.conf
-cat > /etc/makepkg.conf <<'EOF'
-BUILDENV=(!landlock)
-PACKAGER='"mdrv <mdrv@users.noreply.github.com>"'
-GPGKEY=68B3537F39A313B3E574D06777193F152BDBE6A6
-EOF
+export PACKAGER="$PACKAGER"
+export GPGKEY="$ARCH_ARM_KEY"
 
 # Import official Arch Linux ARM Build System key for signing
 echo "Importing Arch Linux ARM Build System key..."
