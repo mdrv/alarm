@@ -31,8 +31,10 @@ echo "Initializing pacman and installing dependencies..."
 pacman -Syu --noconfirm
 pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
-# Configure makepkg
+# Configure makepkg - create user-local config for PKGDEST
+echo "Configuring makepkg for builder..."
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
+sudo -u builder bash -c "echo 'PKGDEST=\"${OUTPUT_DIR}/aarch64\"' > /home/builder/.makepkg.conf"
 
 # Prepare packages directory
 echo "Preparing packages directory..."
@@ -41,7 +43,7 @@ chown -R builder:builder "${OUTPUT_DIR}/aarch64"
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
-# Build packages (unsigned, output directly to aarch64 via env var)
+# Build packages (unsigned, PKGDEST set in user-local config)
 echo "Building packages..."
 cd "${PACKAGES_DIR}"
 BUILD_FAILED=0
@@ -50,44 +52,41 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  echo "DEBUG: Current directory: $(pwd)"
-  echo "DEBUG: PKGDEST env: ${PKGDEST:-not set}"
-  echo "DEBUG: OUTPUT_DIR: ${OUTPUT_DIR}/aarch64"
-  echo "DEBUG: Listing files before build:"
-  ls -la || true
-  echo "DEBUG: makepkg config for PKGDEST:"
-  sudo -u builder bash -c 'makepkg --showconfig | grep -E "^PKGDEST|PACKAGER" | head -5' || true
-
-  if ! sudo -u builder bash -c "PKGDEST='${OUTPUT_DIR}/aarch64' makepkg --needed --syncdeps --noconfirm -f"; then
+  if ! sudo -u builder makepkg --needed --syncdeps --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
-
-  echo "DEBUG: Listing files after build (in pkgdir):"
-  ls -la || true
-  echo "DEBUG: Listing files in OUTPUT_DIR/aarch64:"
-  ls -la "${OUTPUT_DIR}/aarch64" || true
-  echo "DEBUG: Searching for any .pkg.tar.zst files on system:"
-  sudo -u builder find / -name "*.pkg.tar.zst" 2>/dev/null || true
 
   cd ..
   echo "::endgroup::"
 done
 
-# DEBUG: Final filesystem check
-echo "DEBUG: Final filesystem check"
-echo "DEBUG: Contents of ${OUTPUT_DIR}/aarch64:"
-ls -la "${OUTPUT_DIR}/aarch64" || true
-echo "DEBUG: All .pkg.tar.zst files in ${OUTPUT_DIR}:"
-find "${OUTPUT_DIR}" -name "*.pkg.tar.zst" 2>/dev/null || echo "None found"
-echo "DEBUG: All .pkg.tar.zst files in ${PACKAGES_DIR}:"
-find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" 2>/dev/null || echo "None found"
-echo "DEBUG: Permissions on ${OUTPUT_DIR}/aarch64:"
-ls -ld "${OUTPUT_DIR}/aarch64" || true
+# Generate index.html with file listing
+echo "Generating index.html..."
+BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+cd "${OUTPUT_DIR}/aarch64"
+
+cat > index.html <<EOF
+<html><head><title>Index of /aarch64</title></head>
+<body>
+<h1>Index of /aarch64</h1>
+<hr><pre><a href="../">../</a>
+EOF
+
+# List all files with size and date
+for file in *.pkg.tar.zst *.db.tar.gz *.files.tar.gz; do
+  if [ -f "$file" ]; then
+    SIZE=$(stat -c%s "$file" 2>/dev/null || echo 0)
+    DATE=$(stat -c%y-%b-%d %H:%M "$file" 2>/dev/null || echo "unknown")
+    # Format: pad filename to 60 chars, then date and size
+    printf '%-60s  %-20s  %15s\n' "$file" "$DATE" "$SIZE" >> index.html
+  fi
+done
+
+echo "</pre></body></html>" >> index.html
 
 # Create repository database (unsigned)
 echo "Creating repository database..."
-cd "${OUTPUT_DIR}/aarch64"
 if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
   repo-add mdrv.db.tar.gz *.pkg.tar.zst
 else
@@ -95,11 +94,6 @@ else
   touch mdrv.db.tar.gz
   touch mdrv.files.tar.gz
 fi
-
-# Generate index.html
-echo "Generating index.html..."
-BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-sed "s/BUILD_DATE/${BUILD_DATE}/" "${OUTPUT_DIR}/index.html.template" > "${OUTPUT_DIR}/aarch64/index.html"
 
 # Fix permissions
 echo "Fixing permissions..."
