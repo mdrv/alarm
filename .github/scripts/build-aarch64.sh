@@ -33,13 +33,15 @@ pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
 # Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
+echo "PKGDEST=\"${OUTPUT_DIR}/aarch64\"" >> /etc/makepkg.conf
 
 # Prepare packages directory
 echo "Preparing packages directory..."
+mkdir -p "${OUTPUT_DIR}/aarch64"
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
-# Build packages (unsigned)
+# Build packages (unsigned, output directly to aarch64)
 echo "Building packages..."
 cd "${PACKAGES_DIR}"
 BUILD_FAILED=0
@@ -56,11 +58,6 @@ for pkgdir in */; do
   cd ..
   echo "::endgroup::"
 done
-
-# Prepare output directory
-echo "Preparing output directory..."
-mkdir -p "${OUTPUT_DIR}/aarch64"
-find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" -exec cp {} "${OUTPUT_DIR}/aarch64/" \;
 
 # Create repository database (unsigned)
 echo "Creating repository database..."
