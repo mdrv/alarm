@@ -40,32 +40,34 @@ jobs:
           ghcr.io/menci/archlinuxarm:base-devel \
           bash /work/.github/scripts/build-aarch64.sh
 
-    - name: Generate indexes with web-indexer and stage for GitHub Pages
+    - name: Setup web-indexer config
       run: |
-        # Download web-indexer for ARM64
-        curl -fsSL https://github.com/joshbeard/web-indexer/releases/download/v0.9.0/web-indexer_0.9.0_linux_arm64.tar.gz -o web-indexer.tar.gz
-        tar -xzf web-indexer.tar.gz web-indexer
-        chmod +x web-indexer
+        cat > .web-indexer.yml <<'EOF'
+        source: aarch64
+        target: public
+        theme: nord
+        title: "Index of /aarch64"
+        dirs_first: true
+        EOF
 
-        # Clean up any existing public directory
-        if [ -d "public" ]; then
-          sudo rm -rf public
-        fi
+        cat > root-indexer.yml <<'EOF'
+        source: .
+        target: public
+        theme: nord
+        title: "Index of /"
+        dirs_first: true
+        index_file: index.html
+        EOF
 
-        # Create public directory structure
-        mkdir -p public
+    - name: Generate indexes with web-indexer action
+      uses: joshbeard/web-indexer@v0.9.0
+      with:
+        config: .web-indexer.yml
 
-        # Copy aarch64 directory with web-indexer-generated index
-        cp -r aarch64 public/
-
-        # Copy root index.html
-        cp index.html public/
-
-        echo "Staging complete, listing public/:"
-        ls -la public/ || true
-        echo ""
-        echo "Listing public/aarch64/:"
-        ls -la public/aarch64/ || true
+    - name: Generate root index with web-indexer action
+      uses: joshbeard/web-indexer@v0.9.0
+      with:
+        config: root-indexer.yml
 
     - name: Upload build artifacts
       if: always()
