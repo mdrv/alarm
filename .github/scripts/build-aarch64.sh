@@ -85,25 +85,29 @@ fi
 echo "Generating index.html for aarch64/..."
 cd "${ARCH_DIR}"
 
-{
-  echo "<html><head><title>Index of /aarch64</title></head><body><pre>"
-  echo "<a href=\"../\">../</a>"
-  for f in *.pkg.tar.zst *.pkg.tar.xz *.db.tar.gz *.files.tar.gz *.db *.files; do
-    [ -e "$f" ] || continue
-    printf '%-60s\n' "$f" >> index.html
-  done
-  echo "</pre></body></html>"
-} > index.html 2>/dev/null
+# Build the index content in a variable
+INDEX_CONTENT="<html><head><title>Index of /aarch64</title></head><body><pre>"
+INDEX_CONTENT+=$'\n'
+INDEX_CONTENT+="<a href=\"../\">../</a>"
+for f in *.pkg.tar.zst *.pkg.tar.xz *.db.tar.gz *.files.tar.gz *.db *.files; do
+  [ -e "$f" ] || continue
+  printf -v ENTRY '%-60s' "$f"
+  INDEX_CONTENT+=$'\n'"$ENTRY"
+done
+INDEX_CONTENT+=$'\n'
+INDEX_CONTENT+="</pre></body></html>"
+
+echo "$INDEX_CONTENT" > index.html
 
 # Generate root index.html
 echo "Generating root index.html..."
 cd "${OUTPUT_DIR}"
 
-{
-  echo "<html><head><title>Index of /</title></head><body><pre>"
-  echo "<a href=\"aarch64/\">aarch64/</a>"
-  echo "</pre></body></html>"
-} > index.html 2>/dev/null
+cat > index.html <<'EOF'
+<html><head><title>Index of /</title></head><body><pre>
+<a href="aarch64/">aarch64/</a>
+</pre></body></html>
+EOF
 
 # Fix permissions - chown to host user so files are accessible outside container
 echo "Fixing permissions to host user ${HOST_UID}:${HOST_GID}..."
