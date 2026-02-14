@@ -17,19 +17,17 @@ echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
 pacman-key --populate archlinuxarm
 
-# Initialize pacman and install build dependencies (run as builder user)
+# Initialize pacman and install build dependencies (run as root, then build as builder)
 echo "Initializing pacman and installing dependencies..."
 pacman -Syu --noconfirm
-su builder -lc "
-  pacman -S --noconfirm --needed meson scdoc wayland-protocols
-"
+pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
 # Prepare packages directory
 echo "Preparing packages directory..."
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
-# Build packages (run as builder user to access pacman DB)
+# Build packages (run as builder user)
 echo "Building packages..."
 cd "${PACKAGES_DIR}"
 BUILD_FAILED=0
