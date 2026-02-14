@@ -78,24 +78,26 @@ fi
 # Generate index for aarch64/ directory
 echo "Generating index.html for aarch64/..."
 cd "${ARCH_DIR}"
+
 {
   echo "<html><head><title>Index of /aarch64</title></head><body><pre>"
   echo "<a href=\"../\">../</a>"
-  for f in *.pkg.tar.zst *.db.tar.gz *.files.tar.gz *.db *.files 2>/dev/null; do
+  for f in *.pkg.tar.zst *.db.tar.gz *.files.tar.gz *.db *.files; do
     [ -e "$f" ] || continue
     printf '%-60s\n' "$f" >> index.html
   done
   echo "</pre></body></html>"
-} > index.html
+} > index.html 2>/dev/null
 
 # Generate root index.html
 echo "Generating root index.html..."
 cd "${OUTPUT_DIR}"
+
 {
   echo "<html><head><title>Index of /</title></head><body><pre>"
   echo "<a href=\"aarch64/\">aarch64/</a>"
   echo "</pre></body></html>"
-} > index.html
+} > index.html 2>/dev/null
 
 # Fix permissions
 echo "Fixing permissions..."
