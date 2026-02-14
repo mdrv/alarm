@@ -50,14 +50,40 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
+  echo "DEBUG: Current directory: $(pwd)"
+  echo "DEBUG: PKGDEST env: ${PKGDEST:-not set}"
+  echo "DEBUG: OUTPUT_DIR: ${OUTPUT_DIR}/aarch64"
+  echo "DEBUG: Listing files before build:"
+  ls -la || true
+  echo "DEBUG: makepkg config for PKGDEST:"
+  sudo -u builder bash -c 'makepkg --showconfig | grep -E "^PKGDEST|PACKAGER" | head -5' || true
+
   if ! sudo -u builder PKGDEST="${OUTPUT_DIR}/aarch64" makepkg --needed --syncdeps --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
 
+  echo "DEBUG: Listing files after build (in pkgdir):"
+  ls -la || true
+  echo "DEBUG: Listing files in OUTPUT_DIR/aarch64:"
+  ls -la "${OUTPUT_DIR}/aarch64" || true
+  echo "DEBUG: Searching for any .pkg.tar.zst files on system:"
+  sudo -u builder find / -name "*.pkg.tar.zst" 2>/dev/null || true
+
   cd ..
   echo "::endgroup::"
 done
+
+# DEBUG: Final filesystem check
+echo "DEBUG: Final filesystem check"
+echo "DEBUG: Contents of ${OUTPUT_DIR}/aarch64:"
+ls -la "${OUTPUT_DIR}/aarch64" || true
+echo "DEBUG: All .pkg.tar.zst files in ${OUTPUT_DIR}:"
+find "${OUTPUT_DIR}" -name "*.pkg.tar.zst" 2>/dev/null || echo "None found"
+echo "DEBUG: All .pkg.tar.zst files in ${PACKAGES_DIR}:"
+find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" 2>/dev/null || echo "None found"
+echo "DEBUG: Permissions on ${OUTPUT_DIR}/aarch64:"
+ls -ld "${OUTPUT_DIR}/aarch64" || true
 
 # Create repository database (unsigned)
 echo "Creating repository database..."
