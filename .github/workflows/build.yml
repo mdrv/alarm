@@ -41,10 +41,10 @@ jobs:
               done &&
               cd ../aarch64 &&
               if [ -n \\\"\\\$(ls *.pkg.tar.zst 2>/dev/null)\\\" ]; then
-                repo-add --sign --verify alarm.db.tar.gz *.pkg.tar.zst
+                repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst
               else
                 echo \\\"No packages to add to repo\\\" &&
-                touch alarm.db.tar.gz
+                touch mdrv.db.tar.gz
               fi
             \"
           "
