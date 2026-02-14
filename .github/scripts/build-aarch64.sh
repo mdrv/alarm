@@ -58,7 +58,7 @@ for pkgdir in */; do
   echo "DEBUG: makepkg config for PKGDEST:"
   sudo -u builder bash -c 'makepkg --showconfig | grep -E "^PKGDEST|PACKAGER" | head -5' || true
 
-  if ! sudo -u builder PKGDEST="${OUTPUT_DIR}/aarch64" makepkg --needed --syncdeps --noconfirm -f; then
+  if ! sudo -u builder bash -c "PKGDEST='${OUTPUT_DIR}/aarch64' makepkg --needed --syncdeps --noconfirm -f"; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
