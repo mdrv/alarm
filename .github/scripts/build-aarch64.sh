@@ -33,7 +33,6 @@ pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
 # Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
-echo "PKGDEST=\"${OUTPUT_DIR}/aarch64\"" >> /etc/makepkg.conf
 
 # Prepare packages directory
 echo "Preparing packages directory..."
@@ -42,7 +41,7 @@ chown -R builder:builder "${OUTPUT_DIR}/aarch64"
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
-# Build packages (unsigned, output directly to aarch64)
+# Build packages (unsigned, output directly to aarch64 via env var)
 echo "Building packages..."
 cd "${PACKAGES_DIR}"
 BUILD_FAILED=0
@@ -51,7 +50,7 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  if ! sudo -u builder makepkg --needed --syncdeps --noconfirm -f; then
+  if ! sudo -u builder PKGDEST="${OUTPUT_DIR}/aarch64" makepkg --needed --syncdeps --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
