@@ -23,7 +23,28 @@ jobs:
         docker run --rm --platform linux/arm64 \
           -v ${{ github.workspace }}:/output \
           ghcr.io/menci/archlinuxarm:base-devel \
-          bash -c "export PACKAGER='mdrv <mdrv@users.noreply.github.com>' && useradd -m builder && cp -r /output/packages /home/builder/ && cd /home/builder/packages && for pkgdir in */; do echo '::group::Building \$pkgdir' && cd \"\$pkgdir\" && makepkg --sign --needed --noconfirm -f || true && cd .. && echo '::endgroup::' && mkdir -p /output/aarch64 && find /home/builder/packages -name '*.pkg.tar.zst' -exec cp {} /output/aarch64/ \\; && find /home/builder/packages -name '*.pkg.tar.zst.sig' -exec cp {} /output/aarch64/ \\; && cd /output/aarch64 && if [ -n \"\$(ls *.pkg.tar.zst 2>/dev/null)\" ]; then repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst; else touch mdrv.db.tar.gz; fi"
+          bash -lc '
+            export PACKAGER="mdrv <mdrv@users.noreply.github.com>"
+            useradd -m builder
+            cp -r /output/packages /home/builder/
+            cd /home/builder/packages
+            for pkgdir in */; do
+              echo "::group::Building $pkgdir"
+              cd "$pkgdir"
+              makepkg --sign --needed --noconfirm -f || true
+              cd ..
+              echo "::endgroup::"
+            done
+            mkdir -p /output/aarch64
+            find /home/builder/packages -name "*.pkg.tar.zst" -exec cp {} /output/aarch64/ \;
+            find /home/builder/packages -name "*.pkg.tar.zst.sig" -exec cp {} /output/aarch64/ \;
+            cd /output/aarch64
+            if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
+              repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst
+            else
+              touch mdrv.db.tar.gz
+            fi
+          '
 
     - name: Generate index.html
       run: |
