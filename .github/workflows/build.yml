@@ -5,6 +5,12 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    schedule:
+      - cron: '0 0 * * 0'  # Weekly rebuild on Sunday midnight UTC
+
+concurrency:
+  group: aarch64-repo
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -21,37 +27,10 @@ jobs:
     - name: Build packages in Arch Linux ARM container
       run: |
         docker run --rm --platform linux/arm64 \
-          -v ${{ github.workspace }}:/output \
+          -v ${{ github.workspace }}:/work \
+          -w /work \
           ghcr.io/menci/archlinuxarm:base-devel \
-          bash -lc '
-            useradd -m builder
-            cp -r /output/packages /home/builder/
-            chown -R builder:builder /home/builder/packages
-            su builder -lc "
-              export PACKAGER=\"mdrv <mdrv@users.noreply.github.com>\"
-              cd /home/builder/packages
-              for pkgdir in */; do
-                echo \":;group::Building \$pkgdir\"
-                cd \"\$pkgdir\"
-                makepkg --sign --needed --noconfirm -f || true
-                cd ..
-                echo \":;endgroup::\"
-              done
-              mkdir -p /output/aarch64
-              find /home/builder/packages -name \"*.pkg.tar.zst\" -exec cp {} /output/aarch64/ \\;
-              find /home/builder/packages -name \"*.pkg.tar.zst.sig\" -exec cp {} /output/aarch64/ \\;
-              cd /output/aarch64
-              if [ -n \"\$(ls *.pkg.tar.zst 2>/dev/null)\" ]; then
-                repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst
-              else
-                touch mdrv.db.tar.gz
-                touch mdrv.files.tar.gz
-              fi
-              BUILD_DATE=\$(date -u +\"%Y-%m-%d %H:%M:%S UTC\")
-              sed \"s/BUILD_DATE/\$BUILD_DATE/\" /output/index.html.template > /output/aarch64/index.html
-              chown -R \$(id -u):\$(id -g) /output/aarch64
-            "
-          '
+          bash /work/.github/scripts/build-aarch64.sh
 
     - name: Stage files for GitHub Pages
       run: |
@@ -61,6 +40,14 @@ jobs:
         cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || true
         cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || true
         cp aarch64/index.html public/aarch64/ 2>/dev/null || true
+
+    - name: Upload build artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: aarch64-packages
+        path: public/aarch64/
+        retention-days: 7
 
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
