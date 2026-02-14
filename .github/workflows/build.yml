@@ -43,7 +43,7 @@ jobs:
     - name: Generate HTML indexes
       run: |
         # Download web-indexer for ARM64
-        curl -fsSL https://github.com/joshbeard/web-indexer/releases/download/v0.9.0/web-indexer_0.9.0_linux_arm64.tar.gz -o web-indexer.tar.gz
+        curl -fsSL https://github.com/joshbeard/web-indexer/releases/download/0.9.0/web-indexer_0.9.0_linux_arm64.tar.gz -o web-indexer.tar.gz
         tar -xzf web-indexer.tar.gz web-indexer
         chmod +x web-indexer
         
