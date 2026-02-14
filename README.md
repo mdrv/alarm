@@ -20,25 +20,11 @@ sudo pacman -S mdrv/bun
 sudo pacman -S mdrv/tofi
 ```
 
-### Package Signing (Optional)
+## Package Signing
 
-Packages are signed with GPG. To enable signature verification, import the repository key:
+Packages are **unsigned** for simplicity. This is standard practice for personal repositories.
 
-```bash
-wget https://mdrv.github.io/alarm/aarch64/mdrv-key.asc
-sudo pacman-key --add mdrv-key.asc
-sudo pacman-key --lsign-key <KEY_ID>
-```
-
-Then update `/etc/pacman.conf`:
-
-```ini
-[mdrv]
-SigLevel = Required Trusted
-Server = https://mdrv.github.io/alarm/aarch64
-```
-
-If signing fails during build, packages will be deployed as unsigned and you should use `SigLevel = Optional TrustAll`.
+Set `SigLevel = Optional TrustAll` in `/etc/pacman.conf` to use this repository.
 
 ## Available Packages
 

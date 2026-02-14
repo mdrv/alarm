@@ -16,39 +16,6 @@ sed -i 's|^#\?DisableSandbox.*|DisableSandbox|' /etc/pacman.conf || echo "Disabl
 echo "Setting up builder user..."
 useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 
-# Setup GPG for package signing
-echo "Setting up GPG for package signing..."
-export GPG_TTY=$(tty)
-
-# Generate a new GPG key for signing (no passphrase for CI)
-# Create a temporary GPG home directory
-TMP_GPG_DIR=$(mktemp -d)
-export GNUPGHOME="${TMP_GPG_DIR}"
-gpg --batch --gen-key <<EOF
-%no-protection
-Key-Type: RSA
-Key-Length: 4096
-Name-Real: mdrv CI
-Name-Email: mdrv@users.noreply.github.com
-Expire-Date: 0
-%commit
-EOF
-
-# Get the key fingerprint
-KEY_ID=$(gpg --list-keys --with-colons | grep '^fpr' | head -n 1 | cut -d: -f10)
-echo "Generated GPG key: ${KEY_ID}"
-
-# Export the private key and import into pacman-key
-echo "Importing key into pacman-key..."
-gpg --export-secret-keys "${KEY_ID}" > /tmp/signing-key.gpg
-pacman-key --add /tmp/signing-key.gpg
-pacman-key --lsign-key "${KEY_ID}"
-
-# Restore normal GPG home
-export GNUPGHOME="/root/.gnupg"
-mkdir -p "${GNUPGHOME}"
-chmod 700 "${GNUPGHOME}"
-
 # Import official Arch Linux ARM keyring (required for package builds)
 echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
@@ -59,16 +26,15 @@ echo "Initializing pacman and installing dependencies..."
 pacman -Syu --noconfirm
 pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
-# Configure makepkg to use the generated GPG key
+# Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
-echo "GPGKEY=\"${KEY_ID}\"" >> /etc/makepkg.conf
 
 # Prepare packages directory
 echo "Preparing packages directory..."
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
-# Build packages (run as builder user with GPG signing)
+# Build packages (unsigned)
 echo "Building packages..."
 cd "${PACKAGES_DIR}"
 BUILD_FAILED=0
@@ -77,7 +43,7 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  if ! sudo -u builder makepkg --needed --noconfirm --sign -f; then
+  if ! sudo -u builder makepkg --needed --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
@@ -90,13 +56,12 @@ done
 echo "Preparing output directory..."
 mkdir -p "${OUTPUT_DIR}/aarch64"
 find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" -exec cp {} "${OUTPUT_DIR}/aarch64/" \;
-find "${PACKAGES_DIR}" -name "*.pkg.tar.zst.sig" -exec cp {} "${OUTPUT_DIR}/aarch64/" \;
 
-# Create repository database with GPG signing
+# Create repository database (unsigned)
 echo "Creating repository database..."
 cd "${OUTPUT_DIR}/aarch64"
 if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
-  repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst
+  repo-add mdrv.db.tar.gz *.pkg.tar.zst
 else
   echo "No packages built, creating empty database files"
   touch mdrv.db.tar.gz
@@ -112,13 +77,6 @@ sed "s/BUILD_DATE/${BUILD_DATE}/" "${OUTPUT_DIR}/index.html.template" > "${OUTPU
 echo "Fixing permissions..."
 chown -R $(id -u):$(id -g) "${OUTPUT_DIR}/aarch64"
 
-# Export the public key for users to import
-echo "Exporting public key..."
-pacman-key --export "${KEY_ID}" > "${OUTPUT_DIR}/aarch64/mdrv-key.asc"
-
-# Clean up
-rm -rf "${TMP_GPG_DIR}" /tmp/signing-key.gpg
-
 # Exit with error if any build failed
 if [ "$BUILD_FAILED" -eq 1 ]; then
   echo "::error::One or more packages failed to build"
@@ -126,4 +84,3 @@ if [ "$BUILD_FAILED" -eq 1 ]; then
 fi
 
 echo "Build complete!"
-echo "Public key available at: aarch64/mdrv-key.asc"

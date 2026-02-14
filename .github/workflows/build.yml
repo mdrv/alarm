@@ -33,13 +33,9 @@ jobs:
       run: |
         mkdir -p public/aarch64
         cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.pkg.tar.zst.sig public/aarch64/ 2>/dev/null || true
         cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.db.tar.gz.sig public/aarch64/ 2>/dev/null || true
         cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.files.tar.gz.sig public/aarch64/ 2>/dev/null || true
         cp aarch64/index.html public/aarch64/ 2>/dev/null || true
-        cp aarch64/mdrv-key.asc public/aarch64/ 2>/dev/null || true
 
     - name: Upload build artifacts
       if: always()
