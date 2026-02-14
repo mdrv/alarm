@@ -43,23 +43,28 @@ jobs:
               repo-add --sign --verify mdrv.db.tar.gz *.pkg.tar.zst
             else
               touch mdrv.db.tar.gz
+              touch mdrv.files.tar.gz
             fi
             BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
             sed "s/BUILD_DATE/$BUILD_DATE/" /output/index.html.template > /output/aarch64/index.html
             chown -R $(id -u):$(id -g) /output/aarch64
           '
 
+    - name: Stage files for GitHub Pages
+      run: |
+        mkdir -p public/aarch64
+        cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
+        cp aarch64/*.pkg.tar.zst.sig public/aarch64/ 2>/dev/null || true
+        cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || true
+        cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || true
+        cp aarch64/index.html public/aarch64/ 2>/dev/null || true
+
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
+        publish_dir: public
         publish_branch: gh-pages
-        exclude_assets: |
-          .git
-          packages
-          .github
-          index.html.template
         user_name: 'github-actions[bot]'
         user_email: '41898282+github-actions[bot]@users.noreply.github.com'
