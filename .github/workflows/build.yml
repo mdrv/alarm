@@ -42,8 +42,6 @@ jobs:
 
     - name: Generate HTML indexes
       run: |
-        set -e
-        
         # Generate root index.html
         cat > index.html <<'EOFROOT'
         <!DOCTYPE html>
@@ -84,7 +82,7 @@ jobs:
         </html>
         EOFROOT
 
-        # Generate aarch64/index.html with proper file listing
+        # Generate aarch64/index.html
         cat > aarch64/index.html <<'EOFAARCH64'
         <!DOCTYPE html>
         <html lang="en">
@@ -117,14 +115,19 @@ jobs:
                     width: 100%;
                     max-width: 800px;
                     border-collapse: collapse;
+                    margin-top: 20px;
                 }
                 th, td {
                     text-align: left;
                     padding: 8px;
                     border-bottom: 1px solid #4c566a;
                 }
+                tr:last-child td {
+                    border-bottom: none;
+                }
                 .file-name {
                     font-family: 'Courier New', monospace;
+                    font-size: 0.95em;
                 }
             </style>
         </head>
@@ -142,22 +145,25 @@ jobs:
                 <tbody>
         EOFAARCH64
 
-        # Add file entries using printf for better control
-        for f in aarch64/*.pkg.tar.xz aarch64/*.pkg.tar.zst aarch64/*.db.tar.gz aarch64/*.files.tar.gz aarch64/*.db aarch64/*.files; do
-          [ -e "$f" ] || continue
-          
-          size=$(stat --format='%s' "$f")
+        # Add file entries using ls and grep to parse
+        ls -l --time-style=+%Y-%m-%d %H:%M --quoting-style=shell aarch64/*.pkg.tar.xz aarch64/*.pkg.tar.zst aarch64/*.db.tar.gz aarch64/*.files.tar.gz aarch64/*.db aarch64/*.files 2>/dev/null | while IFS= read -r perms links user group size month day time filename; do
+          filename="${filename##*/}"
           size_human=$(numfmt --to=iec --suffix=B "$size" 2>/dev/null || echo "$size bytes")
+          mtime="${month} ${day} ${time}"
           
-          # Use ls output for reliable mtime
-          mtime=$(ls -l --time-style=+%Y-%m-%d %H:%M "$f" | awk '{print $6, $7, $8}')
-          filename=$(basename "$f")
+          # Escape filename for HTML
+          escaped_filename="${filename//&/&amp;}"
+          escaped_filename="${escaped_filename//</<&#60;}"
+          escaped_filename="${escaped_filename//>/&#62;}"
+          escaped_filename="${escaped_filename//\"/&#34;}"
           
-          printf '                    <tr>\n' >> aarch64/index.html
-          printf '                        <td><a href="%s" class="file-name">%s</a></td>\n' "$filename" "$filename" >> aarch64/index.html
-          printf '                        <td>%s</td>\n' "$mtime" >> aarch64/index.html
-          printf '                        <td>%s</td>\n' "$size_human" >> aarch64/index.html
-          printf '                    </tr>\n' >> aarch64/index.html
+          cat >> aarch64/index.html <<FILEENTRY
+                    <tr>
+                        <td><a href="$filename" class="file-name">$filename</a></td>
+                        <td>$mtime</td>
+                        <td>$size_human</td>
+                    </tr>
+        FILEENTRY
         done
 
         # Close the table and HTML
