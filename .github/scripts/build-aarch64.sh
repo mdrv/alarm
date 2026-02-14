@@ -38,6 +38,7 @@ echo "PKGDEST=\"${OUTPUT_DIR}/aarch64\"" >> /etc/makepkg.conf
 # Prepare packages directory
 echo "Preparing packages directory..."
 mkdir -p "${OUTPUT_DIR}/aarch64"
+chown -R builder:builder "${OUTPUT_DIR}/aarch64"
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
