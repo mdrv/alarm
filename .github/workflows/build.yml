@@ -47,13 +47,17 @@ jobs:
         tar -xzf web-indexer.tar.gz web-indexer
         chmod +x web-indexer
         
-        # Generate root index.html
-        ./web-indexer --source . --target public --theme nord --dirs-first --title "Index of /"
+        # Prepare public directory with built packages
+        mkdir -p public
+        cp -a aarch64 public/
         
-        # Generate aarch64/index.html  
-        ./web-indexer --source aarch64 --target public/aarch64 --theme nord --dirs-first --title "Index of /aarch64"
+        # Generate HTML indexes
+        # We index the files within the public directory so links are relative to the site root
+        ./web-indexer --source public --target public --theme nord --dirs-first --title "Index of /"
+        ./web-indexer --source public/aarch64 --target public/aarch64 --theme nord --dirs-first --title "Index of /aarch64"
 
-        echo "Index files generated with web-indexer"
+        echo "Index files generated and packages copied to public/"
+
 
     - name: Upload build artifacts
       if: always()

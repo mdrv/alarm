@@ -11,6 +11,10 @@ ARCH_DIR="${OUTPUT_DIR}/aarch64"
 HOST_UID="${HOST_UID:-1001}"
 HOST_GID="${HOST_GID:-1001}"
 
+echo "Cleaning up any previous builds..."
+rm -rf "${ARCH_DIR}"
+
+
 echo "Host UID: ${HOST_UID}, Host GID: ${HOST_GID}"
 
 # Disable pacman sandbox (Landlock not supported in container)
