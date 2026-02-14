@@ -39,16 +39,6 @@ pacman -S --noconfirm --needed meson scdoc wayland-protocols
 # Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
 
-# Set up builder user config with PKGDEST
-echo "Setting PKGDEST for builder user..."
-sudo -u builder -H bash -c "cat > /home/builder/.makepkg.conf <<'EOF'
-PKGDEST=\"${ARCH_DIR}\"
-EOF"
-
-# Verify config was created
-echo "Verifying .makepkg.conf contents:"
-sudo -u builder -H bash -c "cat /home/builder/.makepkg.conf"
-
 # Prepare directories
 echo "Preparing directories..."
 mkdir -p "${ARCH_DIR}"
@@ -65,11 +55,8 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  # Check PKGDEST before building
-  echo "PKGDEST before build:"
-  sudo -u builder -H bash -c "echo \"PKGDEST=\$PKGDEST\""
-
-  if ! sudo -u builder -H makepkg --needed --syncdeps --noconfirm -f; then
+  # Use PKGDEST environment variable
+  if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f"; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
@@ -81,10 +68,6 @@ done
 # Check if packages are in aarch64 directory
 echo "Checking ${ARCH_DIR} for packages:"
 ls -la "${ARCH_DIR}" || echo "Directory empty or doesn't exist"
-
-# Check if packages are in package dirs
-echo "Checking package directories:"
-find "${PACKAGES_DIR}" -name "*.pkg.tar.zst" 2>/dev/null || echo "No packages found in package dirs"
 
 # Create repository database (in same directory as packages)
 echo "Creating repository database..."
