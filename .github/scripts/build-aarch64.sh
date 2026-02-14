@@ -72,8 +72,11 @@ ls -la "${ARCH_DIR}" || echo "Directory empty or doesn't exist"
 # Create repository database (in same directory as packages)
 echo "Creating repository database..."
 cd "${ARCH_DIR}"
-if [ -n "$(ls *.pkg.tar.zst 2>/dev/null)" ]; then
+# Build database from all package files (both .pkg.tar.zst and .pkg.tar.xz)
+if compgen -G "*.pkg.tar.zst" >/dev/null; then
   repo-add -R mdrv.db.tar.gz ./*.pkg.tar.zst
+elif compgen -G "*.pkg.tar.xz" >/dev/null; then
+  repo-add -R mdrv.db.tar.gz ./*.pkg.tar.xz
 else
   echo "No packages found to build database"
 fi
@@ -85,7 +88,7 @@ cd "${ARCH_DIR}"
 {
   echo "<html><head><title>Index of /aarch64</title></head><body><pre>"
   echo "<a href=\"../\">../</a>"
-  for f in *.pkg.tar.zst *.db.tar.gz *.files.tar.gz *.db *.files; do
+  for f in *.pkg.tar.zst *.pkg.tar.xz *.db.tar.gz *.files.tar.gz *.db *.files; do
     [ -e "$f" ] || continue
     printf '%-60s\n' "$f" >> index.html
   done

@@ -67,7 +67,9 @@ jobs:
           # Copy aarch64 index.html and all files
           echo "DEBUG: Copying aarch64 files"
           cp aarch64/index.html public/aarch64/ 2>/dev/null || echo "WARNING: aarch64/index.html not found"
-          cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || echo "WARNING: No packages found"
+          # Support both .pkg.tar.zst (zstd) and .pkg.tar.xz (xz) package formats
+          cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
+          cp aarch64/*.pkg.tar.xz public/aarch64/ 2>/dev/null || echo "WARNING: No packages found"
           cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || echo "WARNING: No db files found"
           cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || echo "WARNING: No files db found"
           cp aarch64/*.db public/aarch64/ 2>/dev/null || echo "WARNING: No db links found"
