@@ -5,8 +5,8 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
-    schedule:
-      - cron: '0 0 * * 0'  # Weekly rebuild on Sunday midnight UTC
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly rebuild on Sunday midnight UTC
 
 concurrency:
   group: aarch64-repo
@@ -24,11 +24,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Get runner user UID/GID
+      id: user
+      run: |
+        echo "uid=$(id -u)" >> $GITHUB_OUTPUT
+        echo "gid=$(id -g)" >> $GITHUB_OUTPUT
+
     - name: Build packages in Arch Linux ARM container
       run: |
         docker run --rm \
           -v ${{ github.workspace }}:/work \
           -w /work \
+          -e HOST_UID="${{ steps.user.outputs.uid }}" \
+          -e HOST_GID="${{ steps.user.outputs.gid }}" \
           ghcr.io/menci/archlinuxarm:base-devel \
           bash /work/.github/scripts/build-aarch64.sh
 
@@ -39,22 +47,23 @@ jobs:
           echo "DEBUG: Working directory: ${{ github.workspace }}"
           echo "DEBUG: Current directory contents:"
           ls -la || true
-          
-          # Remove public if it exists to avoid permission issues
+
+          echo "DEBUG: Checking if public exists and its ownership"
           if [ -d "public" ]; then
-            echo "DEBUG: Removing existing public directory"
-            rm -rf public || true
+            ls -ld public
+            echo "DEBUG: Removing existing public directory with sudo"
+            sudo rm -rf public
           fi
-          
+
           echo "DEBUG: Creating public/aarch64"
           mkdir -p public/aarch64
           echo "DEBUG: Created directory, listing:"
           ls -la public/aarch64 || true
-          
+
           # Copy root index.html
           echo "DEBUG: Copying index.html"
           cp index.html public/ || echo "WARNING: index.html not found"
-          
+
           # Copy aarch64 index.html and all files
           echo "DEBUG: Copying aarch64 files"
           cp aarch64/index.html public/aarch64/ 2>/dev/null || echo "WARNING: aarch64/index.html not found"
@@ -63,7 +72,7 @@ jobs:
           cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || echo "WARNING: No files db found"
           cp aarch64/*.db public/aarch64/ 2>/dev/null || echo "WARNING: No db links found"
           cp aarch64/*.files public/aarch64/ 2>/dev/null || echo "WARNING: No files links found"
-          
+
           echo "DEBUG: Staging complete, final listing:"
           ls -la public/aarch64/ || true
 

@@ -7,13 +7,19 @@ OUTPUT_DIR="/work"
 PACKAGES_DIR="/home/builder/packages"
 ARCH_DIR="${OUTPUT_DIR}/aarch64"
 
+# Get host UID/GID for proper file ownership
+HOST_UID="${HOST_UID:-1001}"
+HOST_GID="${HOST_GID:-121}"
+
+echo "Host UID: ${HOST_UID}, Host GID: ${HOST_GID}"
+
 # Disable pacman sandbox (Landlock not supported in container)
 echo "Configuring pacman..."
 sed -i 's|^#\?DisableSandbox.*|DisableSandbox|' /etc/pacman.conf || echo "DisableSandbox" >> /etc/pacman.conf
 
-# Create builder user
+# Create builder user with same UID as host to avoid permission issues
 echo "Setting up builder user..."
-useradd -m -u 1000 builder 2>/dev/null || true
+useradd -m -u "${HOST_UID}" builder 2>/dev/null || true
 
 # Configure sudo: allow builder to run pacman without password
 echo "Allowing builder to run pacman without password..."
@@ -99,9 +105,9 @@ cd "${OUTPUT_DIR}"
   echo "</pre></body></html>"
 } > index.html 2>/dev/null
 
-# Fix permissions
-echo "Fixing permissions..."
-chown -R $(id -u):$(id -g) "${OUTPUT_DIR}/aarch64"
+# Fix permissions - chown to host user so files are accessible outside container
+echo "Fixing permissions to host user ${HOST_UID}:${HOST_GID}..."
+chown -R "${HOST_UID}:${HOST_GID}" "${OUTPUT_DIR}/aarch64" "${OUTPUT_DIR}/index.html"
 
 # Exit with error if any build failed
 if [ "$BUILD_FAILED" -eq 1 ]; then
