@@ -85,19 +85,19 @@ fi
 echo "Generating index.html for aarch64/..."
 cd "${ARCH_DIR}"
 
-# Build the index content in a variable
-INDEX_CONTENT="<html><head><title>Index of /aarch64</title></head><body><pre>"
-INDEX_CONTENT+=$'\n'
-INDEX_CONTENT+="<a href=\"../\">../</a>"
+cat > index.html <<'EOFINDEX'
+<html><head><title>Index of /aarch64</title></head><body><pre>
+<a href="../">../</a>
+EOFINDEX
+
 for f in *.pkg.tar.zst *.pkg.tar.xz *.db.tar.gz *.files.tar.gz *.db *.files; do
   [ -e "$f" ] || continue
-  printf -v ENTRY '%-60s' "$f"
-  INDEX_CONTENT+=$'\n'"$ENTRY"
+  printf '<a href="%s">%-60s</a>\n' "$f" "$f" >> index.html
 done
-INDEX_CONTENT+=$'\n'
-INDEX_CONTENT+="</pre></body></html>"
 
-echo "$INDEX_CONTENT" > index.html
+cat >> index.html <<'EOFINDEX'
+</pre></body></html>
+EOFINDEX
 
 # Generate root index.html
 echo "Generating root index.html..."
