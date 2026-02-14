@@ -42,6 +42,8 @@ jobs:
 
     - name: Generate HTML indexes
       run: |
+        set -x
+        
         # Generate root index.html
         cat > index.html <<'EOFROOT'
         <!DOCTYPE html>
@@ -142,9 +144,9 @@ jobs:
           [ -e "$f" ] || continue
           
           # Get file info
-          size=$(stat -f "%s" "$f" 2>/dev/null)
+          size=$(stat -c "%s" "$f")
           size_human=$(numfmt --to=iec --suffix=B "$size" 2>/dev/null || echo "$size bytes")
-          mtime=$(stat -f "%Y-%m-%d %H:%M" "$f" 2>/dev/null)
+          mtime=$(stat -c "%Y-%m-%d %H:%M" "$f")
           filename=$(basename "$f")
           
           echo "                    <tr>" >> aarch64/index.html
@@ -162,8 +164,7 @@ jobs:
         </html>
         EOFAARCH64END
 
-        # Ensure index.html files exist in both locations
-        echo "Index files generated"
+        echo "Index files generated successfully"
 
     - name: Stage files for GitHub Pages
       run: |
@@ -202,3 +203,4 @@ jobs:
         publish_branch: gh-pages
         user_name: 'github-actions[bot]'
         user_email: '41898282+github-actions[bot]@users.noreply.github.com'
+
