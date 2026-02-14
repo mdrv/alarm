@@ -42,7 +42,7 @@ jobs:
 
     - name: Generate HTML indexes
       run: |
-        set -x
+        set -e
         
         # Generate root index.html
         cat > index.html <<'EOFROOT'
@@ -84,7 +84,7 @@ jobs:
         </html>
         EOFROOT
 
-        # Generate aarch64/index.html
+        # Generate aarch64/index.html with proper file listing
         cat > aarch64/index.html <<'EOFAARCH64'
         <!DOCTYPE html>
         <html lang="en">
@@ -123,6 +123,9 @@ jobs:
                     padding: 8px;
                     border-bottom: 1px solid #4c566a;
                 }
+                .file-name {
+                    font-family: 'Courier New', monospace;
+                }
             </style>
         </head>
         <body>
@@ -139,21 +142,22 @@ jobs:
                 <tbody>
         EOFAARCH64
 
-        # Add file entries to aarch64/index.html
+        # Add file entries using printf for better control
         for f in aarch64/*.pkg.tar.xz aarch64/*.pkg.tar.zst aarch64/*.db.tar.gz aarch64/*.files.tar.gz aarch64/*.db aarch64/*.files; do
           [ -e "$f" ] || continue
           
-          # Get file info
-          size=$(stat -c "%s" "$f")
+          size=$(stat --format='%s' "$f")
           size_human=$(numfmt --to=iec --suffix=B "$size" 2>/dev/null || echo "$size bytes")
-          mtime=$(stat -c "%Y-%m-%d %H:%M" "$f")
+          
+          # Use ls output for reliable mtime
+          mtime=$(ls -l --time-style=+%Y-%m-%d %H:%M "$f" | awk '{print $6, $7, $8}')
           filename=$(basename "$f")
           
-          echo "                    <tr>" >> aarch64/index.html
-          echo "                        <td><a href=\"$filename\">$filename</a></td>" >> aarch64/index.html
-          echo "                        <td>$mtime</td>" >> aarch64/index.html
-          echo "                        <td>$size_human</td>" >> aarch64/index.html
-          echo "                    </tr>" >> aarch64/index.html
+          printf '                    <tr>\n' >> aarch64/index.html
+          printf '                        <td><a href="%s" class="file-name">%s</a></td>\n' "$filename" "$filename" >> aarch64/index.html
+          printf '                        <td>%s</td>\n' "$mtime" >> aarch64/index.html
+          printf '                        <td>%s</td>\n' "$size_human" >> aarch64/index.html
+          printf '                    </tr>\n' >> aarch64/index.html
         done
 
         # Close the table and HTML
@@ -203,4 +207,3 @@ jobs:
         publish_branch: gh-pages
         user_name: 'github-actions[bot]'
         user_email: '41898282+github-actions[bot]@users.noreply.github.com'
-
