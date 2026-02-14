@@ -16,16 +16,20 @@ sed -i 's|^#\?DisableSandbox.*|DisableSandbox|' /etc/pacman.conf || echo "Disabl
 echo "Setting up builder user..."
 useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 
+# Configure sudo: allow builder to run pacman without password
+echo "Allowing builder to run pacman without password..."
+echo "builder ALL=(ALL) NOPASSWD: /usr/bin/pacman" > /etc/sudoers.d/builder
+chmod 440 /etc/sudoers.d/builder
+
 # Import official Arch Linux ARM keyring (required for package builds)
 echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
 pacman-key --populate archlinuxarm
 
-# Initialize pacman and install ALL possible dependencies (run as root)
+# Initialize pacman and install basic build dependencies (run as root)
 echo "Initializing pacman and installing dependencies..."
 pacman -Syu --noconfirm
-# Install all runtime and build dependencies for our packages
-pacman -S --noconfirm --needed meson scdoc wayland-protocols freetype2 harfbuzz cairo pango wayland libxkbcommon glib2
+pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
 # Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
@@ -44,7 +48,7 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  if ! sudo -u builder makepkg --needed --noconfirm -f; then
+  if ! sudo -u builder makepkg --needed --syncdeps --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
