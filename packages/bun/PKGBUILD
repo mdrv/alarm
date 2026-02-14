@@ -23,7 +23,8 @@ build() {
 }
 
 package() {
-  install -Dm755 "${srcdir}/bun-linux-aarch64/bun" "${pkgdir}/usr/bin/bun"
+  cd "${srcdir}/bun-linux-aarch64"
+  install -Dm755 "./bun" "${pkgdir}/usr/bin/bun"
   ln -s bun "${pkgdir}/usr/bin/bunx"
   install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
   install -Dm644 "completions/bun.zsh" "${pkgdir}/usr/share/zsh/site-functions/_bun"

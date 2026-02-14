@@ -21,10 +21,11 @@ echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
 pacman-key --populate archlinuxarm
 
-# Initialize pacman and install build dependencies (run as root, then build as builder)
+# Initialize pacman and install ALL possible dependencies (run as root)
 echo "Initializing pacman and installing dependencies..."
 pacman -Syu --noconfirm
-pacman -S --noconfirm --needed meson scdoc wayland-protocols
+# Install all runtime and build dependencies for our packages
+pacman -S --noconfirm --needed meson scdoc wayland-protocols freetype2 harfbuzz cairo pango wayland libxkbcommon glib2
 
 # Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
@@ -43,7 +44,7 @@ for pkgdir in */; do
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
-  if ! sudo -u builder makepkg --needed --syncdeps --noconfirm -f; then
+  if ! sudo -u builder makepkg --needed --noconfirm -f; then
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
   fi
