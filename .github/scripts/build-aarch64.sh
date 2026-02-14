@@ -8,6 +8,10 @@ PACKAGES_DIR="/home/builder/packages"
 BUILDER_UID="1000"
 BUILDER_GID="1000"
 
+# Disable pacman sandbox (Landlock not supported in container)
+echo "Configuring pacman..."
+sed -i 's|^#\?DisableSandbox.*|DisableSandbox|' /etc/pacman.conf || echo "DisableSandbox" >> /etc/pacman.conf
+
 # Create builder user
 echo "Setting up builder user..."
 useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
