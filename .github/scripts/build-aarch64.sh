@@ -12,6 +12,12 @@ BUILDER_GID="1000"
 echo "Setting up builder user..."
 useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 
+# Initialize pacman (required for makepkg dependency checks)
+echo "Initializing pacman..."
+pacman-key --init
+pacman-key --populate archlinuxarm
+pacman -Sy --noconfirm
+
 # Prepare packages directory
 echo "Preparing packages directory..."
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
