@@ -34,23 +34,38 @@ jobs:
 
     - name: Stage files for GitHub Pages
       run: |
+          echo "DEBUG: Starting staging"
           echo "DEBUG: Current directory: $(pwd)"
-          echo "DEBUG: Working directory contents:"
+          echo "DEBUG: Working directory: ${{ github.workspace }}"
+          echo "DEBUG: Current directory contents:"
           ls -la || true
-          echo "DEBUG: Checking for public:"
-          ls -ld public 2>/dev/null || echo "public does not exist"
+          
+          # Remove public if it exists to avoid permission issues
+          if [ -d "public" ]; then
+            echo "DEBUG: Removing existing public directory"
+            rm -rf public || true
+          fi
+          
+          echo "DEBUG: Creating public/aarch64"
           mkdir -p public/aarch64
-          echo "DEBUG: Created public/aarch64"
+          echo "DEBUG: Created directory, listing:"
+          ls -la public/aarch64 || true
+          
           # Copy root index.html
-          cp index.html public/
+          echo "DEBUG: Copying index.html"
+          cp index.html public/ || echo "WARNING: index.html not found"
+          
           # Copy aarch64 index.html and all files
-          cp aarch64/index.html public/aarch64/
-          cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
-          cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || true
-          cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || true
-          cp aarch64/*.db public/aarch64/ 2>/dev/null || true
-          cp aarch64/*.files public/aarch64/ 2>/dev/null || true
-          echo "DEBUG: Staging complete"
+          echo "DEBUG: Copying aarch64 files"
+          cp aarch64/index.html public/aarch64/ 2>/dev/null || echo "WARNING: aarch64/index.html not found"
+          cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || echo "WARNING: No packages found"
+          cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || echo "WARNING: No db files found"
+          cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || echo "WARNING: No files db found"
+          cp aarch64/*.db public/aarch64/ 2>/dev/null || echo "WARNING: No db links found"
+          cp aarch64/*.files public/aarch64/ 2>/dev/null || echo "WARNING: No files links found"
+          
+          echo "DEBUG: Staging complete, final listing:"
+          ls -la public/aarch64/ || true
 
     - name: Upload build artifacts
       if: always()
