@@ -15,12 +15,17 @@ ARCH_ARM_KEY="68B3537F39A313B3E574D06777193F152BDBE6A6"
 echo "Setting up builder user..."
 useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 
-# Configure makepkg (disable landlock, setup signing)
+# Configure makepkg (disable landlock via environment variable)
 echo "Configuring makepkg..."
-cat > /etc/makepkg.conf <<EOF
+export BUILDENV="!landlock"
+export PACKAGER="${PACKAGER}"
+export GPGKEY="${ARCH_ARM_KEY}"
+
+# Also try setting in makepkg.conf
+cat > /etc/makepkg.conf <<'EOF'
 BUILDENV=(!landlock)
-PACKAGER="${PACKAGER}"
-GPGKEY="${ARCH_ARM_KEY}"
+PACKAGER='"mdrv <mdrv@users.noreply.github.com>"'
+GPGKEY=68B3537F39A313B3E574D06777193F152BDBE6A6
 EOF
 
 # Import official Arch Linux ARM Build System key for signing
