@@ -81,37 +81,9 @@ else
   echo "No packages found to build database"
 fi
 
-# Generate index for aarch64/ directory
-echo "Generating index.html for aarch64/..."
-cd "${ARCH_DIR}"
-
-cat > index.html <<'EOFINDEX'
-<html><head><title>Index of /aarch64</title></head><body><pre>
-<a href="../">../</a>
-EOFINDEX
-
-for f in *.pkg.tar.zst *.pkg.tar.xz *.db.tar.gz *.files.tar.gz *.db *.files; do
-  [ -e "$f" ] || continue
-  printf '<a href="%s">%-60s</a>\n' "$f" "$f" >> index.html
-done
-
-cat >> index.html <<'EOFINDEX'
-</pre></body></html>
-EOFINDEX
-
-# Generate root index.html
-echo "Generating root index.html..."
-cd "${OUTPUT_DIR}"
-
-cat > index.html <<'EOF'
-<html><head><title>Index of /</title></head><body><pre>
-<a href="aarch64/">aarch64/</a>
-</pre></body></html>
-EOF
-
 # Fix permissions - chown to host user so files are accessible outside container
 echo "Fixing permissions to host user ${HOST_UID}:${HOST_GID}..."
-chown -R "${HOST_UID}:${HOST_GID}" "${OUTPUT_DIR}/aarch64" "${OUTPUT_DIR}/index.html"
+chown -R "${HOST_UID}:${HOST_GID}" "${OUTPUT_DIR}/aarch64"
 
 # Exit with error if any build failed
 if [ "$BUILD_FAILED" -eq 1 ]; then
