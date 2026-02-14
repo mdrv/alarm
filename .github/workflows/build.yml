@@ -40,55 +40,31 @@ jobs:
           ghcr.io/menci/archlinuxarm:base-devel \
           bash /work/.github/scripts/build-aarch64.sh
 
-    - name: Generate indexes with web-indexer (nord theme)
+    - name: Generate indexes with web-indexer and stage for GitHub Pages
       run: |
         # Download web-indexer for ARM64
         curl -fsSL https://github.com/joshbeard/web-indexer/releases/download/v0.9.0/web-indexer_0.9.0_linux_arm64.tar.gz -o web-indexer.tar.gz
         tar -xzf web-indexer.tar.gz web-indexer
         chmod +x web-indexer
 
-        # Generate index for aarch64 directory with nord theme
-        ./web-indexer --source aarch64 --target aarch64 --theme nord --title "Index of /aarch64" --dirs-first
-
-        # Generate index for root directory
-        ./web-indexer --source . --target . --theme nord --title "Index of /" --dirs-first --index-file index.html
-
-    - name: Stage files for GitHub Pages
-      run: |
-        echo "DEBUG: Starting staging"
-        echo "DEBUG: Current directory: $(pwd)"
-        echo "DEBUG: Working directory: ${{ github.workspace }}"
-        echo "DEBUG: Current directory contents:"
-        ls -la || true
-
-        echo "DEBUG: Checking if public exists and its ownership"
+        # Clean up any existing public directory
         if [ -d "public" ]; then
-          ls -ld public
-          echo "DEBUG: Removing existing public directory with sudo"
           sudo rm -rf public
         fi
 
-        echo "DEBUG: Creating public/aarch64"
-        mkdir -p public/aarch64
-        echo "DEBUG: Created directory, listing:"
-        ls -la public/aarch64 || true
+        # Create public directory structure
+        mkdir -p public
+
+        # Copy aarch64 directory with web-indexer-generated index
+        cp -r aarch64 public/
 
         # Copy root index.html
-        echo "DEBUG: Copying index.html"
-        cp index.html public/ || echo "WARNING: index.html not found"
+        cp index.html public/
 
-        # Copy aarch64 index.html and all files
-        echo "DEBUG: Copying aarch64 files"
-        cp aarch64/index.html public/aarch64/ 2>/dev/null || echo "WARNING: aarch64/index.html not found"
-        # Support both .pkg.tar.zst (zstd) and .pkg.tar.xz (xz) package formats
-        cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.pkg.tar.xz public/aarch64/ 2>/dev/null || echo "WARNING: No packages found"
-        cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || echo "WARNING: No db files found"
-        cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || echo "WARNING: No files db found"
-        cp aarch64/*.db public/aarch64/ 2>/dev/null || echo "WARNING: No db links found"
-        cp aarch64/*.files public/aarch64/ 2>/dev/null || echo "WARNING: No files links found"
-
-        echo "DEBUG: Staging complete, final listing:"
+        echo "Staging complete, listing public/:"
+        ls -la public/ || true
+        echo ""
+        echo "Listing public/aarch64/:"
         ls -la public/aarch64/ || true
 
     - name: Upload build artifacts
