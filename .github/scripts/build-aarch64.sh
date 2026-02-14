@@ -19,7 +19,11 @@ useradd -m -u ${BUILDER_UID} builder 2>/dev/null || true
 # Setup GPG for package signing
 echo "Setting up GPG for package signing..."
 export GPG_TTY=$(tty)
+
 # Generate a new GPG key for signing (no passphrase for CI)
+# Create a temporary GPG home directory
+TMP_GPG_DIR=$(mktemp -d)
+export GNUPGHOME="${TMP_GPG_DIR}"
 gpg --batch --gen-key <<EOF
 %no-protection
 Key-Type: RSA
@@ -30,9 +34,20 @@ Expire-Date: 0
 %commit
 EOF
 
-# Get the key fingerprint and add to pacman config
+# Get the key fingerprint
 KEY_ID=$(gpg --list-keys --with-colons | grep '^fpr' | head -n 1 | cut -d: -f10)
 echo "Generated GPG key: ${KEY_ID}"
+
+# Export the private key and import into pacman-key
+echo "Importing key into pacman-key..."
+gpg --export-secret-keys "${KEY_ID}" > /tmp/signing-key.gpg
+pacman-key --add /tmp/signing-key.gpg
+pacman-key --lsign-key "${KEY_ID}"
+
+# Restore normal GPG home
+export GNUPGHOME="/root/.gnupg"
+mkdir -p "${GNUPGHOME}"
+chmod 700 "${GNUPGHOME}"
 
 # Import official Arch Linux ARM keyring (required for package builds)
 echo "Importing Arch Linux ARM keyring..."
@@ -99,7 +114,10 @@ chown -R $(id -u):$(id -g) "${OUTPUT_DIR}/aarch64"
 
 # Export the public key for users to import
 echo "Exporting public key..."
-gpg --armor --export "${KEY_ID}" > "${OUTPUT_DIR}/aarch64/mdrv-key.asc"
+pacman-key --export "${KEY_ID}" > "${OUTPUT_DIR}/aarch64/mdrv-key.asc"
+
+# Clean up
+rm -rf "${TMP_GPG_DIR}" /tmp/signing-key.gpg
 
 # Exit with error if any build failed
 if [ "$BUILD_FAILED" -eq 1 ]; then
