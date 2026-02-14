@@ -18,6 +18,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04-arm
+    defaults:
+      shell: bash
     steps:
     - uses: actions/checkout@v4
 
@@ -31,16 +33,23 @@ jobs:
 
     - name: Stage files for GitHub Pages
       run: |
-        mkdir -p public/aarch64
-        # Copy root index.html
-        cp index.html public/
-        # Copy aarch64 index.html and all files
-        cp aarch64/index.html public/aarch64/
-        cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.db public/aarch64/ 2>/dev/null || true
-        cp aarch64/*.files public/aarch64/ 2>/dev/null || true
+          echo "DEBUG: Current directory: $(pwd)"
+          echo "DEBUG: Working directory contents:"
+          ls -la || true
+          echo "DEBUG: Checking for public:"
+          ls -ld public 2>/dev/null || echo "public does not exist"
+          mkdir -p public/aarch64
+          echo "DEBUG: Created public/aarch64"
+          # Copy root index.html
+          cp index.html public/
+          # Copy aarch64 index.html and all files
+          cp aarch64/index.html public/aarch64/
+          cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
+          cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || true
+          cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || true
+          cp aarch64/*.db public/aarch64/ 2>/dev/null || true
+          cp aarch64/*.files public/aarch64/ 2>/dev/null || true
+          echo "DEBUG: Staging complete"
 
     - name: Upload build artifacts
       if: always()
