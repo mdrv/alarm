@@ -17,16 +17,13 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-
     - name: Build packages in Arch Linux ARM container
       run: |
-        docker run --rm --platform linux/arm64 \
+        docker run --rm \
           -v ${{ github.workspace }}:/work \
           -w /work \
           ghcr.io/menci/archlinuxarm:base-devel \
@@ -38,8 +35,11 @@ jobs:
         cp aarch64/*.pkg.tar.zst public/aarch64/ 2>/dev/null || true
         cp aarch64/*.pkg.tar.zst.sig public/aarch64/ 2>/dev/null || true
         cp aarch64/*.db.tar.gz public/aarch64/ 2>/dev/null || true
+        cp aarch64/*.db.tar.gz.sig public/aarch64/ 2>/dev/null || true
         cp aarch64/*.files.tar.gz public/aarch64/ 2>/dev/null || true
+        cp aarch64/*.files.tar.gz.sig public/aarch64/ 2>/dev/null || true
         cp aarch64/index.html public/aarch64/ 2>/dev/null || true
+        cp aarch64/mdrv-key.asc public/aarch64/ 2>/dev/null || true
 
     - name: Upload build artifacts
       if: always()
