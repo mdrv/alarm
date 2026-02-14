@@ -40,34 +40,150 @@ jobs:
           ghcr.io/menci/archlinuxarm:base-devel \
           bash /work/.github/scripts/build-aarch64.sh
 
-    - name: Setup web-indexer config
+    - name: Generate HTML indexes
       run: |
-        cat > .web-indexer.yml <<'EOF'
-        source: aarch64
-        target: public
-        theme: nord
-        title: "Index of /aarch64"
-        dirs_first: true
-        EOF
+        # Generate root index.html
+        cat > index.html <<'EOFROOT'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Index of /</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+                    background-color: #2e3440;
+                    color: #d8dee9;
+                    margin: 0;
+                    padding: 20px;
+                    line-height: 1.6;
+                }
+                a {
+                    color: #88c0d0;
+                    text-decoration: none;
+                }
+                a:hover {
+                    color: #bf40bf;
+                    text-decoration: underline;
+                }
+                .directory {
+                    color: #8fbcbb;
+                    font-weight: 500;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Index of /</h1>
+            <ul>
+                <li><a href="aarch64/" class="directory">aarch64/</a></li>
+            </ul>
+        </body>
+        </html>
+        EOFROOT
 
-        cat > root-indexer.yml <<'EOF'
-        source: .
-        target: public
-        theme: nord
-        title: "Index of /"
-        dirs_first: true
-        index_file: index.html
-        EOF
+        # Generate aarch64/index.html
+        cat > aarch64/index.html <<'EOFAARCH64'
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Index of /aarch64</title>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+                    background-color: #2e3440;
+                    color: #d8dee9;
+                    margin: 0;
+                    padding: 20px;
+                    line-height: 1.6;
+                }
+                a {
+                    color: #88c0d0;
+                    text-decoration: none;
+                }
+                a:hover {
+                    color: #bf40bf;
+                    text-decoration: underline;
+                }
+                .directory {
+                    color: #8fbcbb;
+                    font-weight: 500;
+                }
+                table {
+                    width: 100%;
+                    max-width: 800px;
+                    border-collapse: collapse;
+                }
+                th, td {
+                    text-align: left;
+                    padding: 8px;
+                    border-bottom: 1px solid #4c566a;
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Index of /aarch64</h1>
+            <p><a href="../" class="directory">../</a></p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Last Modified</th>
+                        <th>Size</th>
+                    </tr>
+                </thead>
+                <tbody>
+        EOFAARCH64
 
-    - name: Generate indexes with web-indexer action
-      uses: joshbeard/web-indexer@v0.9.0
-      with:
-        config: .web-indexer.yml
+        # Add file entries to aarch64/index.html
+        for f in aarch64/*.pkg.tar.xz aarch64/*.pkg.tar.zst aarch64/*.db.tar.gz aarch64/*.files.tar.gz aarch64/*.db aarch64/*.files; do
+          [ -e "$f" ] || continue
+          
+          # Get file info
+          size=$(stat -f "%s" "$f" 2>/dev/null)
+          size_human=$(numfmt --to=iec --suffix=B "$size" 2>/dev/null || echo "$size bytes")
+          mtime=$(stat -f "%Y-%m-%d %H:%M" "$f" 2>/dev/null)
+          filename=$(basename "$f")
+          
+          echo "                    <tr>" >> aarch64/index.html
+          echo "                        <td><a href=\"$filename\">$filename</a></td>" >> aarch64/index.html
+          echo "                        <td>$mtime</td>" >> aarch64/index.html
+          echo "                        <td>$size_human</td>" >> aarch64/index.html
+          echo "                    </tr>" >> aarch64/index.html
+        done
 
-    - name: Generate root index with web-indexer action
-      uses: joshbeard/web-indexer@v0.9.0
-      with:
-        config: root-indexer.yml
+        # Close the table and HTML
+        cat >> aarch64/index.html <<'EOFAARCH64END'
+                </tbody>
+            </table>
+        </body>
+        </html>
+        EOFAARCH64END
+
+        # Ensure index.html files exist in both locations
+        echo "Index files generated"
+
+    - name: Stage files for GitHub Pages
+      run: |
+        # Clean up any existing public directory
+        if [ -d "public" ]; then
+          sudo rm -rf public
+        fi
+
+        # Create public directory structure
+        mkdir -p public/aarch64
+
+        # Copy all files
+        cp -r aarch64 public/
+        cp index.html public/
+
+        echo "Staging complete, listing public/:"
+        ls -la public/ || true
+        echo ""
+        echo "Listing public/aarch64/:"
+        ls -la public/aarch64/ || true
 
     - name: Upload build artifacts
       if: always()
