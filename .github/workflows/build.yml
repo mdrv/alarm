@@ -44,12 +44,10 @@ jobs:
             else
               touch mdrv.db.tar.gz
             fi
+            BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+            sed "s/BUILD_DATE/$BUILD_DATE/" /output/index.html.template > /output/aarch64/index.html
+            chown -R $(id -u):$(id -g) /output/aarch64
           '
-
-    - name: Generate index.html
-      run: |
-        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        sed "s/BUILD_DATE/$BUILD_DATE/" index.html.template > aarch64/index.html
 
     - name: Deploy to GitHub Pages
       if: github.ref == 'refs/heads/main'
