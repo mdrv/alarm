@@ -24,12 +24,21 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
   # Import GPG private key
   echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
 
-  # Get key ID using more reliable method
-  # Try to get subkey first (preferred for signing), fall back to master key
-  KEY_ID=$(gpg --list-secret-keys --keyid-format long | grep -A 1 "^sec" | grep "^\[" | head -n1 | tr -d '[]')
+  # Debug: list secret keys to see actual format
+  echo "Debug: Listing secret keys..."
+  gpg --list-secret-keys --keyid-format long
+
+  # Get key ID - use simpler grep pattern
+  KEY_ID=$(gpg --list-secret-keys --keyid-format long | grep "^sec" | head -n1 | awk '{print $2}')
+
+  # Fallback: extract from fingerprint output if above fails
+  if [ -z "${KEY_ID}" ]; then
+    KEY_ID=$(gpg --list-secret-keys | grep "D93EF7B1DAC1910BCBC8B8A08F6852C610B71619" | awk '{print $NF}')
+  fi
 
   if [ -z "${KEY_ID}" ]; then
     echo "::error::No GPG key found to use for signing"
+    echo "Debug: Please check GPG key format in logs above"
     exit 1
   fi
 
