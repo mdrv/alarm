@@ -23,17 +23,12 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
 
   # Create builder's .gnupg directory with proper ownership
   mkdir -p /home/builder/.gnupg
-  chown builder:builder /home/builder/.gnupg
 
   # Import GPG private key as root
   echo "${GPG_PRIVATE_KEY}" | gpg --batch --import --homedir /root/.gnupg
 
-  # Copy keyring to builder user
-  cp -r /root/.gnupg/* /home/builder/.gnupg/
-  chown -R builder:builder /home/builder/.gnupg
-  chmod 700 /home/builder/.gnupg
-  find /home/builder/.gnupg -type d -exec chmod 700 {} \;
-  find /home/builder/.gnupg -type f -exec chmod 600 {} \;
+  # Copy keyring to builder user using install (atomic ownership)
+  install -o builder -g builder -m 755 /root/.gnupg/* /home/builder/.gnupg/
 
   # Use direct key ID (16 chars from known fingerprint)
   KEY_ID="8F6852C610B71619"
