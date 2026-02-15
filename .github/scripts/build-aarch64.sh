@@ -24,17 +24,19 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
   # Import GPG private key
   echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
 
-  # List keys to get key ID
-  KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^ssb:' | cut -d: -f5 | head -n1)
+  # Get key ID using more reliable method
+  # Try to get subkey first (preferred for signing), fall back to master key
+  KEY_ID=$(gpg --list-secret-keys --keyid-format long | grep -A 1 "^sec" | grep "^\[" | head -n1 | tr -d '[]')
 
   if [ -z "${KEY_ID}" ]; then
-    echo "::error::No GPG subkey found to use for signing"
+    echo "::error::No GPG key found to use for signing"
     exit 1
   fi
 
   echo "Using GPG key ID: ${KEY_ID}"
 
   # Configure GPG for non-interactive signing
+  mkdir -p /root/.gnupg
   echo "default-key ${KEY_ID}" > /root/.gnupg/gpg.conf
   echo "pinentry-mode loopback" >> /root/.gnupg/gpg.conf
 
