@@ -93,8 +93,9 @@ for pkgdir in */; do
 
   # Use PKGDEST environment variable
   # Add --sign flag if GPG is configured
+  # IMPORTANT: Set GNUPGHOME to point builder user to root's keyring
   if [ -n "${KEY_ID:-}" ]; then
-    if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
+    if ! sudo -u builder bash -c "GNUPGHOME=/root/.gnupg PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
       echo "::warning::Failed to build $pkgdir"
       BUILD_FAILED=1
     fi
@@ -118,6 +119,7 @@ echo "Creating repository database..."
 cd "${ARCH_DIR}"
 # Build database from all package files (both .pkg.tar.zst and .pkg.tar.xz)
 # Add --sign flag if GPG is configured
+# IMPORTANT: Set GNUPGHOME to point to root's keyring
 if [ -n "${KEY_ID:-}" ]; then
   if compgen -G "*.pkg.tar.zst" >/dev/null; then
     repo-add -R -s -k "${KEY_ID}" mdrv.db.tar.gz ./*.pkg.tar.zst
