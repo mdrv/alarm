@@ -24,12 +24,11 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
   # Create builder's .gnupg directory with proper ownership
   mkdir -p /home/builder/.gnupg
   chown builder:builder /home/builder/.gnupg
-  chmod 700 /home/builder/.gnupg
 
   # Import GPG private key as root
   echo "${GPG_PRIVATE_KEY}" | gpg --batch --import --homedir /root/.gnupg
 
-  # Copy keyring to builder user with correct ownership
+  # Copy keyring to builder user
   cp -r /root/.gnupg/* /home/builder/.gnupg/
   chown -R builder:builder /home/builder/.gnupg
   chmod 700 /home/builder/.gnupg
@@ -41,7 +40,7 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
 
   echo "Using GPG key ID: ${KEY_ID}"
 
-  # Verify secret key exists
+  # Verify secret key exists as builder
   if ! su - builder -c "gpg --batch --list-secret-keys --keyid-format=long '${KEY_ID}'" >/dev/null 2>&1; then
     echo "::error::GPG key ${KEY_ID} not found in builder's keyring after import"
     exit 1
@@ -109,8 +108,9 @@ for pkgdir in */; do
 
   # Use PKGDEST environment variable
   # Add --sign flag if GPG is configured
+  # IMPORTANT: Set GNUPGHOME to use builder's keyring
   if [ -n "${KEY_ID:-}" ]; then
-    if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
+    if ! sudo -u builder bash -c "GNUPGHOME=/home/builder/.gnupg PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
       echo "::warning::Failed to build $pkgdir"
       BUILD_FAILED=1
     fi
@@ -134,11 +134,12 @@ echo "Creating repository database..."
 cd "${ARCH_DIR}"
 # Build database from all package files (both .pkg.tar.zst and .pkg.tar.xz)
 # Add --sign flag if GPG is configured
+# IMPORTANT: Set GNUPGHOME to use builder's keyring
 if [ -n "${KEY_ID:-}" ]; then
   if compgen -G "*.pkg.tar.zst" >/dev/null; then
-    repo-add -R -s -k "${KEY_ID}" mdrv.db.tar.gz ./*.pkg.tar.zst
+    sudo -u builder bash -c "GNUPGHOME=/home/builder/.gnupg repo-add -R -s -k '${KEY_ID}' mdrv.db.tar.gz ./*.pkg.tar.zst"
   elif compgen -G "*.pkg.tar.xz" >/dev/null; then
-    repo-add -R -s -k "${KEY_ID}" mdrv.db.tar.gz ./*.pkg.tar.xz
+    sudo -u builder bash -c "GNUPGHOME=/home/builder/.gnupg repo-add -R -s -k '${KEY_ID}' mdrv.db.tar.gz ./*.pkg.tar.xz"
   else
     echo "No packages found to build database"
   fi
