@@ -48,8 +48,8 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
     export GPG_TTY=/dev/null
   fi
 else
-  echo "GPG signing not configured (GPG_PRIVATE_KEY not set)"
-  unset GPG_PRIVATE_KEY
+  echo "::error::GPG_PRIVATE_KEY not set. Please add it to repository secrets."
+  exit 1
 fi
 
 
