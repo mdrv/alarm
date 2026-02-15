@@ -17,6 +17,42 @@ rm -rf "${ARCH_DIR}"
 
 echo "Host UID: ${HOST_UID}, Host GID: ${HOST_GID}"
 
+# Setup GPG signing if GPG_PRIVATE_KEY is provided
+if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
+  echo "Setting up GPG signing..."
+
+  # Import GPG private key
+  echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
+
+  # List keys to get key ID
+  KEY_ID=$(gpg --list-secret-keys --with-colons | grep '^ssb:' | cut -d: -f5 | head -n1)
+
+  if [ -z "${KEY_ID}" ]; then
+    echo "::error::No GPG subkey found to use for signing"
+    exit 1
+  fi
+
+  echo "Using GPG key ID: ${KEY_ID}"
+
+  # Configure GPG for non-interactive signing
+  echo "default-key ${KEY_ID}" > /root/.gnupg/gpg.conf
+  echo "pinentry-mode loopback" >> /root/.gnupg/gpg.conf
+
+  # Add signing configuration to makepkg.conf
+  echo "GPGKEY=\"${KEY_ID}\"" >> /etc/makepkg.conf
+
+  # Set up passphrase for non-interactive use
+  if [ -n "${GPG_PASSPHRASE:-}" ]; then
+    echo "${GPG_PASSPHRASE}" > /tmp/gpg-passphrase
+    chmod 600 /tmp/gpg-passphrase
+    export GPG_TTY=/dev/null
+  fi
+else
+  echo "GPG signing not configured (GPG_PRIVATE_KEY not set)"
+  unset GPG_PRIVATE_KEY
+fi
+
+
 # Disable pacman sandbox (Landlock not supported in container)
 echo "Configuring pacman..."
 sed -i 's|^#\?DisableSandbox.*|DisableSandbox|' /etc/pacman.conf || echo "DisableSandbox" >> /etc/pacman.conf
@@ -60,9 +96,17 @@ for pkgdir in */; do
   cd "$pkgdir"
 
   # Use PKGDEST environment variable
-  if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f"; then
-    echo "::warning::Failed to build $pkgdir"
-    BUILD_FAILED=1
+  # Add --sign flag if GPG is configured
+  if [ -n "${KEY_ID:-}" ]; then
+    if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
+      echo "::warning::Failed to build $pkgdir"
+      BUILD_FAILED=1
+    fi
+  else
+    if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f"; then
+      echo "::warning::Failed to build $pkgdir"
+      BUILD_FAILED=1
+    fi
   fi
 
   cd ..
@@ -77,12 +121,28 @@ ls -la "${ARCH_DIR}" || echo "Directory empty or doesn't exist"
 echo "Creating repository database..."
 cd "${ARCH_DIR}"
 # Build database from all package files (both .pkg.tar.zst and .pkg.tar.xz)
-if compgen -G "*.pkg.tar.zst" >/dev/null; then
-  repo-add -R mdrv.db.tar.gz ./*.pkg.tar.zst
-elif compgen -G "*.pkg.tar.xz" >/dev/null; then
-  repo-add -R mdrv.db.tar.gz ./*.pkg.tar.xz
+# Add --sign flag if GPG is configured
+if [ -n "${KEY_ID:-}" ]; then
+  if compgen -G "*.pkg.tar.zst" >/dev/null; then
+    repo-add -R -s -k "${KEY_ID}" mdrv.db.tar.gz ./*.pkg.tar.zst
+  elif compgen -G "*.pkg.tar.xz" >/dev/null; then
+    repo-add -R -s -k "${KEY_ID}" mdrv.db.tar.gz ./*.pkg.tar.xz
+  else
+    echo "No packages found to build database"
+  fi
 else
-  echo "No packages found to build database"
+  if compgen -G "*.pkg.tar.zst" >/dev/null; then
+    repo-add -R mdrv.db.tar.gz ./*.pkg.tar.zst
+  elif compgen -G "*.pkg.tar.xz" >/dev/null; then
+    repo-add -R mdrv.db.tar.gz ./*.pkg.tar.xz
+  else
+    echo "No packages found to build database"
+  fi
+fi
+
+# Cleanup: remove GPG passphrase file if it was created
+if [ -f /tmp/gpg-passphrase ]; then
+  shred -u /tmp/gpg-passphrase
 fi
 
 # Fix permissions - chown to host user so files are accessible outside container

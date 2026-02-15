@@ -37,6 +37,8 @@ jobs:
           -w /work \
           -e HOST_UID="${{ steps.user.outputs.uid }}" \
           -e HOST_GID="${{ steps.user.outputs.gid }}" \
+          -e GPG_PRIVATE_KEY="${{ secrets.GPG_PRIVATE_KEY }}" \
+          -e GPG_PASSPHRASE="${{ secrets.GPG_PASSPHRASE }}" \
           ghcr.io/menci/archlinuxarm:base-devel \
           bash /work/.github/scripts/build-aarch64.sh
 
