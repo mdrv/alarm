@@ -24,17 +24,8 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
   # Import GPG private key
   echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
 
-  # Extract first available secret key ID (primary or subkey)
-  # Using awk to avoid pipefail on grep when only ssb: exists
-  KEY_ID="$(
-    gpg --batch --with-colons --keyid-format=long --list-secret-keys \
-      | awk -F: '/^(sec|ssb):/ { print $5; exit }'
-  )"
-
-  if [ -z "${KEY_ID}" ]; then
-    echo "::error::Failed to extract GPG key ID"
-    exit 1
-  fi
+  # Use full fingerprint directly (most reliable)
+  KEY_ID="8F6852C610B71619"
 
   echo "Using GPG key ID: ${KEY_ID}"
 
