@@ -24,10 +24,21 @@ if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
   # Import GPG private key
   echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
 
-  # Use full fingerprint directly (reliable approach)
-  KEY_ID="D93EF7B1DAC1910BCBC8B8A08F6852C610B71619"
+  # Extract 16-char key ID (the format GPG expects)
+  # Using --with-colons format for reliable parsing
+  KEY_ID=$(gpg --with-colons --list-secret-keys | grep '^sec:' | head -n1 | cut -d: -f5)
+
+  if [ -z "${KEY_ID}" ]; then
+    echo "::error::Failed to extract GPG key ID"
+    exit 1
+  fi
 
   echo "Using GPG key ID: ${KEY_ID}"
+  echo "Verifying key exists in keyring..."
+  if ! gpg --list-secret-keys "${KEY_ID}" >/dev/null 2>&1; then
+    echo "::error::GPG key ${KEY_ID} not found in keyring after import"
+    exit 1
+  fi
 
   # Configure GPG for non-interactive signing
   mkdir -p /root/.gnupg
