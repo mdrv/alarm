@@ -14,51 +14,7 @@ HOST_GID="${HOST_GID:-1001}"
 echo "Cleaning up any previous builds..."
 rm -rf "${ARCH_DIR}"
 
-
 echo "Host UID: ${HOST_UID}, Host GID: ${HOST_GID}"
-
-# Setup GPG signing if GPG_PRIVATE_KEY is provided
-if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
-  echo "Setting up GPG signing..."
-
-  # Create builder's .gnupg directory with proper ownership
-  mkdir -p /home/builder/.gnupg
-
-  # Import GPG private key as root
-  echo "${GPG_PRIVATE_KEY}" | gpg --batch --import --homedir /root/.gnupg
-
-  # Copy keyring to builder user using install (atomic ownership)
-  install -o builder -g builder -m 755 /root/.gnupg/* /home/builder/.gnupg/
-
-  # Use direct key ID (16 chars from known fingerprint)
-  KEY_ID="8F6852C610B71619"
-
-  echo "Using GPG key ID: ${KEY_ID}"
-
-  # Verify secret key exists as builder
-  if ! su - builder -c "gpg --batch --list-secret-keys --keyid-format=long '${KEY_ID}'" >/dev/null 2>&1; then
-    echo "::error::GPG key ${KEY_ID} not found in builder's keyring after import"
-    exit 1
-  fi
-
-  # Configure GPG for non-interactive signing (in builder's homedir)
-  su - builder -c "echo 'default-key ${KEY_ID}' > /home/builder/.gnupg/gpg.conf"
-  su - builder -c "echo 'pinentry-mode loopback' >> /home/builder/.gnupg/gpg.conf"
-
-  # Add signing configuration to makepkg.conf
-  echo "GPGKEY=\"${KEY_ID}\"" >> /etc/makepkg.conf
-
-  # Set up passphrase for non-interactive use
-  if [ -n "${GPG_PASSPHRASE:-}" ]; then
-    echo "${GPG_PASSPHRASE}" > /tmp/gpg-passphrase
-    chmod 600 /tmp/gpg-passphrase
-    export GPG_TTY=/dev/null
-  fi
-else
-  echo "::error::GPG_PRIVATE_KEY not set. Please add it to repository secrets."
-  exit 1
-fi
-
 
 # Disable pacman sandbox (Landlock not supported in container)
 echo "Configuring pacman..."
@@ -77,10 +33,7 @@ chmod 440 /etc/sudoers.d/builder
 echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
 pacman-key --populate archlinuxarm
-
-# Install only build dependencies (no full system upgrade)
-echo "Installing build dependencies only..."
-pacman -S --noconfirm --needed meson scdoc wayland-protocols
+pacman -Sy --noconfirm archlinux-keyring
 
 # Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
@@ -102,18 +55,9 @@ for pkgdir in */; do
   cd "$pkgdir"
 
   # Use PKGDEST environment variable
-  # Add --sign flag if GPG is configured
-  # IMPORTANT: Set GNUPGHOME to use builder's keyring
-  if [ -n "${KEY_ID:-}" ]; then
-    if ! sudo -u builder bash -c "GNUPGHOME=/home/builder/.gnupg PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
-      echo "::warning::Failed to build $pkgdir"
-      BUILD_FAILED=1
-    fi
-  else
-    if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f"; then
-      echo "::warning::Failed to build $pkgdir"
-      BUILD_FAILED=1
-    fi
+  if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f"; then
+    echo "::warning::Failed to build $pkgdir"
+    BUILD_FAILED=1
   fi
 
   cd ..
@@ -128,29 +72,12 @@ ls -la "${ARCH_DIR}" || echo "Directory empty or doesn't exist"
 echo "Creating repository database..."
 cd "${ARCH_DIR}"
 # Build database from all package files (both .pkg.tar.zst and .pkg.tar.xz)
-# Add --sign flag if GPG is configured
-# IMPORTANT: Set GNUPGHOME to use builder's keyring
-if [ -n "${KEY_ID:-}" ]; then
-  if compgen -G "*.pkg.tar.zst" >/dev/null; then
-    sudo -u builder bash -c "GNUPGHOME=/home/builder/.gnupg repo-add -R -s -k '${KEY_ID}' mdrv.db.tar.gz ./*.pkg.tar.zst"
-  elif compgen -G "*.pkg.tar.xz" >/dev/null; then
-    sudo -u builder bash -c "GNUPGHOME=/home/builder/.gnupg repo-add -R -s -k '${KEY_ID}' mdrv.db.tar.gz ./*.pkg.tar.xz"
-  else
-    echo "No packages found to build database"
-  fi
+if compgen -G "*.pkg.tar.zst" >/dev/null; then
+  repo-add -R mdrv.db.tar.gz ./*.pkg.tar.zst
+elif compgen -G "*.pkg.tar.xz" >/dev/null; then
+  repo-add -R mdrv.db.tar.gz ./*.pkg.tar.xz
 else
-  if compgen -G "*.pkg.tar.zst" >/dev/null; then
-    repo-add -R mdrv.db.tar.gz ./*.pkg.tar.zst
-  elif compgen -G "*.pkg.tar.xz" >/dev/null; then
-    repo-add -R mdrv.db.tar.gz ./*.pkg.tar.xz
-  else
-    echo "No packages found to build database"
-  fi
-fi
-
-# Cleanup: remove GPG passphrase file if it was created
-if [ -f /tmp/gpg-passphrase ]; then
-  shred -u /tmp/gpg-passphrase
+  echo "No packages found to build database"
 fi
 
 # Fix permissions - chown to host user so files are accessible outside container
