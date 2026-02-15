@@ -22,9 +22,7 @@ sudo pacman -S mdrv/tofi
 
 ## Package Signing
 
-Packages are **unsigned** for simplicity. This is standard practice for personal repositories.
-
-Set `SigLevel = Optional TrustAll` in `/etc/pacman.conf` to use this repository.
+Packages are **unsigned**. Add `SigLevel = Optional TrustAll` in `/etc/pacman.conf`.
 
 ## Available Packages
 

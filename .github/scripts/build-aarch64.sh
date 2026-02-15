@@ -33,7 +33,9 @@ chmod 440 /etc/sudoers.d/builder
 echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
 pacman-key --populate archlinuxarm
-pacman -Sy --noconfirm archlinux-keyring
+
+# Upgrade system packages
+pacman -Syu --noconfirm
 
 # Configure makepkg
 echo "PACKAGER=\"${PACKAGER}\"" >> /etc/makepkg.conf
