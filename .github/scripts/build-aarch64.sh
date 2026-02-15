@@ -21,18 +21,35 @@ echo "Host UID: ${HOST_UID}, Host GID: ${HOST_GID}"
 if [ -n "${GPG_PRIVATE_KEY:-}" ]; then
   echo "Setting up GPG signing..."
 
-  # Import GPG private key
-  echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
+  # Create builder's .gnupg directory with proper ownership
+  mkdir -p /home/builder/.gnupg
+  chown builder:builder /home/builder/.gnupg
+  chmod 700 /home/builder/.gnupg
+
+  # Import GPG private key as root
+  echo "${GPG_PRIVATE_KEY}" | gpg --batch --import --homedir /root/.gnupg
+
+  # Copy keyring to builder user with correct ownership
+  cp -r /root/.gnupg/* /home/builder/.gnupg/
+  chown -R builder:builder /home/builder/.gnupg
+  chmod 700 /home/builder/.gnupg
+  find /home/builder/.gnupg -type d -exec chmod 700 {} \;
+  find /home/builder/.gnupg -type f -exec chmod 600 {} \;
 
   # Use direct key ID (16 chars from known fingerprint)
   KEY_ID="8F6852C610B71619"
 
   echo "Using GPG key ID: ${KEY_ID}"
 
-  # Configure GPG for non-interactive signing
-  mkdir -p /root/.gnupg
-  echo "default-key ${KEY_ID}" > /root/.gnupg/gpg.conf
-  echo "pinentry-mode loopback" >> /root/.gnupg/gpg.conf
+  # Verify secret key exists
+  if ! su - builder -c "gpg --batch --list-secret-keys --keyid-format=long '${KEY_ID}'" >/dev/null 2>&1; then
+    echo "::error::GPG key ${KEY_ID} not found in builder's keyring after import"
+    exit 1
+  fi
+
+  # Configure GPG for non-interactive signing (in builder's homedir)
+  su - builder -c "echo 'default-key ${KEY_ID}' > /home/builder/.gnupg/gpg.conf"
+  su - builder -c "echo 'pinentry-mode loopback' >> /home/builder/.gnupg/gpg.conf"
 
   # Add signing configuration to makepkg.conf
   echo "GPGKEY=\"${KEY_ID}\"" >> /etc/makepkg.conf
@@ -67,9 +84,8 @@ echo "Importing Arch Linux ARM keyring..."
 pacman-key --init
 pacman-key --populate archlinuxarm
 
-# Initialize pacman and install build dependencies
-echo "Initializing pacman and installing dependencies..."
-pacman -Syu --noconfirm
+# Install only build dependencies (no full system upgrade)
+echo "Installing build dependencies only..."
 pacman -S --noconfirm --needed meson scdoc wayland-protocols
 
 # Configure makepkg
@@ -93,9 +109,8 @@ for pkgdir in */; do
 
   # Use PKGDEST environment variable
   # Add --sign flag if GPG is configured
-  # IMPORTANT: Set GNUPGHOME to point builder user to root's keyring
   if [ -n "${KEY_ID:-}" ]; then
-    if ! sudo -u builder bash -c "GNUPGHOME=/root/.gnupg PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
+    if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f --sign"; then
       echo "::warning::Failed to build $pkgdir"
       BUILD_FAILED=1
     fi
@@ -119,7 +134,6 @@ echo "Creating repository database..."
 cd "${ARCH_DIR}"
 # Build database from all package files (both .pkg.tar.zst and .pkg.tar.xz)
 # Add --sign flag if GPG is configured
-# IMPORTANT: Set GNUPGHOME to point to root's keyring
 if [ -n "${KEY_ID:-}" ]; then
   if compgen -G "*.pkg.tar.zst" >/dev/null; then
     repo-add -R -s -k "${KEY_ID}" mdrv.db.tar.gz ./*.pkg.tar.zst
