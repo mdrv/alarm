@@ -27,10 +27,12 @@ depends=(
 )
 provides=('f3d')
 conflicts=('f3d')
-source=("f3d-${pkgver}-${pkgrel}-aarch64.pkg.tar.xz")
+
+# No build needed - prebuilt package
+source=("${pkgname}-${pkgver}-${pkgrel}-aarch64.pkg.tar.xz")
 sha256sums=('SKIP')
 
 package() {
-  # Extract prebuilt package
-  tar -xzf "${srcdir}/${source[0]}" -C "${pkgdir}"
+  # Copy prebuilt package to destination
+  cp "${srcdir}/${pkgname}-${pkgver}-${pkgrel}-aarch64.pkg.tar.xz" "${pkgdir}/"
 }
