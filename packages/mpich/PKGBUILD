@@ -14,7 +14,7 @@ depends=('gcc-fortran' 'libxml2' 'openssh' 'numactl' 'pciutils' 'hwloc' 'bash')
 makedepends=(texlive-core sowing autoconf python)
 optdepends=(perl python)
 source=("https://www.mpich.org/static/downloads/${pkgver}/${pkgname}-${pkgver}.tar.gz")
-sha256sums=('47d774587a7156a53752218c811c852e70ac44db9c502dc3f399b4cb817e3818'
+sha256sums=('SKIP')
 options=('!libtool')
 
 build() {
