@@ -54,6 +54,17 @@ chown -R builder:builder "${OUTPUT_DIR}"
 cp -r "${OUTPUT_DIR}/packages" /home/builder/
 chown -R builder:builder /home/builder/packages
 
+# Copy prebuilt packages first (if prebuilt/ directory exists)
+if [ -d "${OUTPUT_DIR}/prebuilt" ]; then
+  echo "Copying prebuilt packages..."
+  for prebuilt_pkg in "${OUTPUT_DIR}/prebuilt"/*.pkg.tar.xz "${OUTPUT_DIR}/prebuilt"/*.pkg.tar.zst; do
+    if [ -f "$prebuilt_pkg" ]; then
+      echo "Copying prebuilt: $prebuilt_pkg"
+      cp "$prebuilt_pkg" "${ARCH_DIR}/"
+    fi
+  done
+fi
+
 # Build packages
 echo "Building packages..."
 cd "${PACKAGES_DIR}"
@@ -84,33 +95,7 @@ build_package() {
   return 0
 }
 
-# Function to install a prebuilt package directly
-install_prebuilt() {
-  local pkgdir="$1"
-  local prebuilt
-  echo "::group::Installing prebuilt $pkgdir"
-  
-  # Find any prebuilt package file in this directory
-  prebuilt=$(ls "${pkgdir}"/*.pkg.tar.xz "${pkgdir}"/*.pkg.tar.zst 2>/dev/null | head -1)
-  
-  if [ -n "$prebuilt" ]; then
-    echo "Copying prebuilt package: $prebuilt → ${ARCH_DIR}/"
-    cp "$prebuilt" "${ARCH_DIR}/"
-    
-    # Add to repository database so pacman can scan it
-    echo "Adding to repository database: $prebuilt"
-    cd "${ARCH_DIR}"
-    repo-add mdrv.db.tar.gz "$(basename "$prebuilt")"
-    cd "${PACKAGES_DIR}"
-    
-    echo "::endgroup::"
-    return 0
-  fi
-  
-  echo "::warning::No prebuilt package found in $pkgdir"
-  echo "::endgroup::"
-  return 1
-}
+
 
 # Function to build a package with PKGBUILD (or skip if prebuilt exists)
 build_or_install() {
@@ -149,14 +134,7 @@ build_or_install() {
 echo "Building priority packages in dependency order..."
 for pkg in "${BUILD_PRIORITY[@]}"; do
   if [ -d "$pkg" ]; then
-    # Check for prebuilt package first
-    if ls "${pkg}"/*.pkg.tar.xz "${pkg}"/*.pkg.tar.zst 2>/dev/null | head -1 | grep -q .; then
-      # Prebuilt package found - install it directly
-      install_prebuilt "$pkg"
-    else
-      # No prebuilt - build with PKGBUILD
-      build_or_install "$pkg"
-    fi
+    build_package "$pkg"
   else
     echo "::warning::Priority package $pkg not found, skipping..."
   fi
@@ -172,12 +150,7 @@ for pkgdir in */; do
     continue
   fi
 
-  # Check for prebuilt package first
-  if ls "${pkgdir}"/*.pkg.tar.xz "${pkgdir}"/*.pkg.tar.zst 2>/dev/null | head -1 | grep -q .; then
-    install_prebuilt "$pkgdir"
-  else
-    build_or_install "$pkgdir"
-  fi
+  build_package "$pkgdir"
 done
 
 # Check if packages are in aarch64 directory
