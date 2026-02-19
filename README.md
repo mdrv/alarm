@@ -27,7 +27,7 @@ Packages are **unsigned**. Add `SigLevel = Optional TrustAll` in `/etc/pacman.co
 ## Available Packages
 
 - **bun** - Fast JavaScript runtime, bundler, test runner, and package manager (prebuilt binary from official releases)
-- **f3d** - Fast and minimalist 3D viewer with ray tracing support (prebuilt aarch64 AppImage from v3.4.1 release)
+- **f3d** - Fast and minimalist 3D viewer with ray tracing support (prebuilt aarch64 binary)
 - **ospray** - Ray Tracing Based Rendering Engine for High-Fidelity Visualization (prebuilt aarch64 binary from official releases)
 - **tofi** - Tiny rofi / dmenu replacement for wlroots-based Wayland compositors
 
