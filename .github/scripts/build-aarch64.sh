@@ -10,6 +10,7 @@ ARCH_DIR="${OUTPUT_DIR}/aarch64"
 # Build priority: packages that need to be built first (in dependency order)
 # After building each priority package, it will be installed before building dependents
 BUILD_PRIORITY=(
+  "mpich"
   "ospray"
   "f3d-git"
 )

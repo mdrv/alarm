@@ -20,9 +20,9 @@ depends=(
   alembic
   assimp
   draco
+  gcc-fortran
   hicolor-icon-theme
   libxcursor
-  mpich
   netcdf
   onetbb
   opencascade
