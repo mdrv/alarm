@@ -12,7 +12,7 @@ depends=(
   glibc
   onetbb
 )
-optdepends=('mpich: for MPI distributed rendering support')
+optdepends=()
 provides=('ospray')
 conflicts=('ospray')
 source=("ospray-${pkgver}-aarch64.tar.gz::https://github.com/ospray/OSPRay/releases/download/v${pkgver}/ospray-${pkgver}.aarch64.linux.tar.gz")

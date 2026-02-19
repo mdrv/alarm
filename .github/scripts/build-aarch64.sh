@@ -9,10 +9,9 @@ ARCH_DIR="${OUTPUT_DIR}/aarch64"
 
 # Build priority: packages that need to be built first (in dependency order)
 # After building each priority package, it will be installed before building dependents
+# NOTE: f3d-git should be built manually, not automatically (builds locally without MPI, long compile time)
 BUILD_PRIORITY=(
-  "mpich"
   "ospray"
-  "f3d-git"
 )
 
 # Get host UID/GID for proper file ownership
