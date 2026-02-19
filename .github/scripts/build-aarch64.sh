@@ -7,6 +7,13 @@ OUTPUT_DIR="/work"
 PACKAGES_DIR="/home/builder/packages"
 ARCH_DIR="${OUTPUT_DIR}/aarch64"
 
+# Build priority: packages that need to be built first (in dependency order)
+# After building each priority package, it will be installed before building dependents
+BUILD_PRIORITY=(
+  "ospray"
+  "f3d-git"
+)
+
 # Get host UID/GID for proper file ownership
 HOST_UID="${HOST_UID:-1001}"
 HOST_GID="${HOST_GID:-1001}"
@@ -52,18 +59,52 @@ echo "Building packages..."
 cd "${PACKAGES_DIR}"
 BUILD_FAILED=0
 
-for pkgdir in */; do
+# Function to build a single package
+build_package() {
+  local pkgdir="$1"
   echo "::group::Building $pkgdir"
   cd "$pkgdir"
 
   # Use PKGDEST environment variable
-  if ! sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f"; then
+  if sudo -u builder bash -c "PKGDEST='${ARCH_DIR}' makepkg --needed --syncdeps --noconfirm -f"; then
+    # Install the newly built package so dependent packages can find it
+    local pkg_file=$(ls "${ARCH_DIR}"/${pkgdir}-*.pkg.tar.* 2>/dev/null | head -1)
+    if [ -n "$pkg_file" ]; then
+      echo "Installing $pkg_file for dependent packages..."
+      pacman -U --noconfirm "$pkg_file" || echo "::warning::Failed to install $pkg_file"
+    fi
+  else
     echo "::warning::Failed to build $pkgdir"
     BUILD_FAILED=1
+    return 1
   fi
 
   cd ..
   echo "::endgroup::"
+  return 0
+}
+
+# Build priority packages first (in specified order)
+echo "Building priority packages in dependency order..."
+for pkg in "${BUILD_PRIORITY[@]}"; do
+  if [ -d "$pkg" ]; then
+    build_package "$pkg"
+  else
+    echo "::warning::Priority package $pkg not found, skipping..."
+  fi
+done
+
+# Build remaining packages in alphabetical order
+echo "Building remaining packages..."
+for pkgdir in */; do
+  # Skip packages already built in priority list
+  pkgname="${pkgdir%/}"
+  if [[ " ${BUILD_PRIORITY[@]} " =~ " ${pkgname} " ]]; then
+    echo "Skipping $pkgname (already built as priority package)"
+    continue
+  fi
+
+  build_package "$pkgdir"
 done
 
 # Check if packages are in aarch64 directory

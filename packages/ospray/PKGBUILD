@@ -1,0 +1,48 @@
+# Maintainer (aarch64): mdrv
+# Based on ospray from AUR by Bruno Pagani <archange@archlinux.org>
+pkgname=ospray
+pkgver=3.2.0
+pkgrel=1
+pkgdesc="Ray Tracing Based Rendering Engine for High-Fidelity Visualization"
+arch=('aarch64')
+url="https://www.ospray.org/"
+license=('Apache-2.0')
+depends=(
+  gcc-libs
+  glibc
+  onetbb
+)
+optdepends=('mpich: for MPI distributed rendering support')
+provides=('ospray')
+conflicts=('ospray')
+source=("ospray-${pkgver}-aarch64.tar.gz::https://github.com/ospray/OSPRay/releases/download/v${pkgver}/ospray-${pkgver}.aarch64.linux.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+  cd "${srcdir}/ospray-${pkgver}.aarch64.linux"
+  # No build needed for prebuilt binary package
+}
+
+package() {
+  cd "${srcdir}/ospray-${pkgver}.aarch64.linux"
+
+  # Install binaries
+  install -Dm755 bin/* -t "${pkgdir}/usr/bin/"
+
+  # Install libraries (exclude TBB libraries which conflict with onetbb, preserve symlinks)
+  find lib -name "libtbb.so*" -o -name "libtbbmalloc.so*" | xargs -I {} rm -f {}
+  install -d "${pkgdir}/usr/lib"
+  cp -a lib/lib*.so* "${pkgdir}/usr/lib/"
+  install -d "${pkgdir}/usr/lib/cmake"
+  cp -r lib/cmake/ospray-${pkgver} "${pkgdir}/usr/lib/cmake/"
+
+  # Install headers
+  install -d "${pkgdir}/usr/include"
+  cp -r include/ospray "${pkgdir}/usr/include/"
+
+  # Install documentation
+  install -Dm644 doc/LICENSE.txt "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 doc/README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+  install -Dm644 doc/third-party-programs.txt "${pkgdir}/usr/share/doc/${pkgname}/third-party-programs.txt"
+  install -Dm644 doc/third-party-programs*.txt -t "${pkgdir}/usr/share/doc/${pkgname}/"
+}
