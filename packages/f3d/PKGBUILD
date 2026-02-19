@@ -26,8 +26,6 @@ depends=(
   python
 )
 makedepends=(
-  appimaged
-  squashfs-tools
 )
 provides=('f3d')
 conflicts=('f3d')
