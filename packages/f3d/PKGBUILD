@@ -1,9 +1,9 @@
 # Maintainer (aarch64): mdrv
-# Prebuilt aarch64 binary package from local build
+# Prebuilt aarch64 binary package (built locally)
 pkgname=f3d
 pkgver=3.4.1
 pkgrel=1
-pkgdesc="A fast and minimalist 3D viewer (prebuilt aarch64 binary)"
+pkgdesc="A fast and minimalist 3D viewer (prebuilt aarch64 binary, built with ospray support)"
 arch=('aarch64')
 url="https://github.com/f3d-app/f3d"
 license=('BSD-3-Clause')
@@ -28,11 +28,12 @@ depends=(
 provides=('f3d')
 conflicts=('f3d')
 
-# No build needed - prebuilt package
+# Prebuilt package - use source as the package itself
 source=("${pkgname}-${pkgver}-${pkgrel}-aarch64.pkg.tar.xz")
 sha256sums=('SKIP')
 
 package() {
-  # Copy prebuilt package to destination
-  cp "${srcdir}/${pkgname}-${pkgver}-${pkgrel}-aarch64.pkg.tar.xz" "${pkgdir}/"
+  # Prebuilt package - just copy it as-is
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}-${pkgrel}-aarch64.pkg.tar.xz" "${pkgdir}/"
+  install -Dm644 "${srcdir}/${pkgname}-${pkgver}-${pkgrel}-aarch64.pkg.tar.xz" "${pkgdir}/${pkgname}-${pkgver}-${pkgrel}-aarch64.pkg.tar.zst"
 }
