@@ -22,6 +22,7 @@ depends=(
   draco
   hicolor-icon-theme
   libxcursor
+  mpich
   netcdf
   onetbb
   opencascade
