@@ -1,0 +1,55 @@
+# Maintainer (aarch64): mdrv
+# Prebuilt aarch64 binary from official f3d releases (AppImage)
+pkgname=f3d
+pkgver=3.4.1
+pkgrel=1
+pkgdesc="A fast and minimalist 3D viewer (prebuilt aarch64 binary from v3.4.1 release)"
+arch=('aarch64')
+url="https://github.com/f3d-app/f3d/releases"
+license=('BSD-3-Clause')
+depends=(
+  ospray
+  openvdb
+  vtk
+  alembic
+  assimp
+  draco
+  gcc-libs
+  glibc
+  hicolor-icon-theme
+  libxcursor
+  netcdf
+  onetbb
+  opencascade
+  openexr
+  openmp
+  python
+)
+makedepends=(
+  appimaged
+  squashfs-tools
+)
+provides=('f3d')
+conflicts=('f3d')
+source=("f3d-${pkgver}-aarch64-AppImage.tar.gz::https://github.com/f3d-app/f3d/releases/download/v${pkgver}/f3d-${pkgver}-aarch64-AppImage.tar.gz")
+sha256sums=('SKIP')
+
+prepare() {
+  # Install AppImage dependencies
+  appimaged --verbose install --to=local "${srcdir}"
+}
+
+package() {
+  # Install AppImage
+  install -Dm755 "${srcdir}/f3d-${pkgver}-aarch64.AppImage" "${pkgdir}/opt/f3d/f3d.AppImage"
+
+  # Install libraries
+  install -d "${pkgdir}/usr/lib"
+  cp -a "${srcdir}/usr/lib/"* "${pkgdir}/usr/lib/"
+
+  # Install binary
+  install -Dm755 "${srcdir}/usr/bin/f3d" "${pkgdir}/usr/bin/f3d"
+
+  # Install license
+  install -Dm644 "${srcdir}/usr/share/doc/f3d/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
