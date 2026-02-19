@@ -88,6 +88,9 @@ build_package() {
 echo "Building priority packages in dependency order..."
 for pkg in "${BUILD_PRIORITY[@]}"; do
   if [ -d "$pkg" ]; then
+    # Refresh package database before building to ensure makepkg can find dependencies
+    echo "Refreshing package database for $pkg..."
+    pacman -Sy --noconfirm || echo "::warning::Failed to refresh package database"
     build_package "$pkg"
   else
     echo "::warning::Priority package $pkg not found, skipping..."
