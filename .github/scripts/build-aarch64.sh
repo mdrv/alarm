@@ -100,8 +100,8 @@ install_prebuilt() {
     # Add to repository database so pacman can scan it
     echo "Adding to repository database: $prebuilt"
     cd "${ARCH_DIR}"
-    repo-add mdrv.db.tar.gz "$prebuilt"
-    cd - "${PACKAGES_DIR}"
+    repo-add mdrv.db.tar.gz "$(basename "$prebuilt")"
+    cd "${PACKAGES_DIR}"
     
     echo "::endgroup::"
     return 0
@@ -176,7 +176,7 @@ for pkgdir in */; do
   if ls "${pkgdir}"/*.pkg.tar.xz "${pkgdir}"/*.pkg.tar.zst 2>/dev/null | head -1 | grep -q .; then
     install_prebuilt "$pkgdir"
   else
-    build_package "$pkgdir"
+    build_or_install "$pkgdir"
   fi
 done
 
@@ -188,10 +188,10 @@ ls -la "${ARCH_DIR}" || echo "Directory empty or doesn't exist"
 echo "Creating repository database..."
 cd "${ARCH_DIR}"
 # Build database from all package files (both .pkg.tar.zst and .pkg.tar.xz)
-if compgen -G "*.pkg.tar.zst" >/dev/null; then
-  repo-add -R mdrv.db.tar.gz ./*.pkg.tar.zst
-elif compgen -G "*.pkg.tar.xz" >/dev/null; then
-  repo-add -R mdrv.db.tar.gz ./*.pkg.tar.xz
+shopt -s nullglob
+pkg_files=(*.pkg.tar.zst *.pkg.tar.xz)
+if [ ${#pkg_files[@]} -gt 0 ]; then
+  repo-add -R mdrv.db.tar.gz "${pkg_files[@]}"
 else
   echo "No packages found to build database"
 fi
