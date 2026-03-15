@@ -1,0 +1,17 @@
+[
+	{
+		"pkgname": "bun",
+		"repo": "https://github.com/oven-sh/bun",
+		"path": "packages/bun"
+	},
+	{
+		"pkgname": "ospray",
+		"repo": "https://github.com/RenderKit/ospray",
+		"path": "packages/ospray"
+	},
+	{
+		"pkgname": "tofi",
+		"repo": "https://github.com/philj56/tofi",
+		"path": "packages/tofi"
+	}
+]

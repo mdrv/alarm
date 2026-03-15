@@ -1,0 +1,26 @@
+name: Update AUR Packages from Git Releases
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Setup Nushell
+        run: pacman -Sy --noconfirm pacman-contrib nushell
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update packages
+        run: nu update.nu
