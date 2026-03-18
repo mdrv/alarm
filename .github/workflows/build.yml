@@ -1,12 +1,9 @@
 name: Build AArch64 Arch Repo
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 0'  # Weekly rebuild on Sunday midnight UTC
+    - cron: '0 6 * * *'  # After update.yml
+  workflow_dispatch:
 
 concurrency:
   group: aarch64-repo

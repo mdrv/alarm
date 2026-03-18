@@ -1,4 +1,4 @@
-name: Update AUR Packages from Git Releases
+name: Update PKGBUILD from Git Releases
 
 on:
   schedule:
