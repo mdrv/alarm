@@ -1,7 +1,7 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 # Based on bun-bin from AUR by Noel Jacob <noeljacob91 at gmail dot com>
 pkgname=bun
-pkgver=1.3.10
+pkgver=1.3.11
 pkgrel=1
 pkgdesc="All-in-one JavaScript runtime built for speed, with bundler, transpiler, test runner, and package manager. Includes bunx and shell completions"
 arch=('aarch64')
@@ -11,8 +11,8 @@ provides=('bun')
 conflicts=('bun')
 source=("bun-aarch64-${pkgver}.zip::https://github.com/oven-sh/bun/releases/download/bun-v${pkgver}/bun-linux-aarch64.zip"
         "LICENSE")
-sha256sums=('fa5ecb25cafa8e8f5c87a0f833719d46dd0af0a86c7837d806531212d55636d3'
-            'SKIP')
+sha256sums=('d13944da12a53ecc74bf6a720bd1d04c4555c038dfe422365356a7be47691fdf'
+            '8ad9d37e1e165dfc9c6936162d1894f54bfd44e3b8831a10bf16cc6eb4c0af53')
 
 build() {
   cd "bun-linux-aarch64"
