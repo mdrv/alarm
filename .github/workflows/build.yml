@@ -12,11 +12,12 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build:
-    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04-arm
     defaults:
       run:
@@ -58,7 +59,6 @@ jobs:
 
         echo "Index files generated and packages copied to public/"
 
-
     - name: Upload build artifacts
       if: always()
       uses: actions/upload-artifact@v4
@@ -67,12 +67,20 @@ jobs:
         path: public/
         retention-days: 7
 
-    - name: Deploy to GitHub Pages
+    - name: Upload Pages artifact
       if: github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v4
+      uses: actions/upload-pages-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: public
-        publish_branch: gh-pages
-        user_name: 'github-actions[bot]'
-        user_email: '41898282+github-actions[bot]@users.noreply.github.com'
+        path: public
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
