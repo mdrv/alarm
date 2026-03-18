@@ -1,9 +1,11 @@
 name: Build AArch64 Arch Repo
 
 on:
-  schedule:
-    - cron: '0 6 * * *'  # After update.yml
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Update PKGBUILDs from Git Releases"]
+    types: [completed]
+    branches: [main]
 
 concurrency:
   group: aarch64-repo
@@ -14,6 +16,7 @@ permissions:
 
 jobs:
   build:
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04-arm
     defaults:
       run:

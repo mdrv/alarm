@@ -1,4 +1,4 @@
-name: Update PKGBUILD from Git Releases
+name: Update PKGBUILDs from Git Releases
 
 on:
   schedule:
