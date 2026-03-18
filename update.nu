@@ -196,18 +196,21 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 		if $dry_run {
 			print $"   [DRY-RUN] Would update pkgver to ($new_ver)"
 		} else {
-			open PKGBUILD
-			| lines
-			| each { |line|
-				if ($line | str starts-with "pkgver=") {
-					$"pkgver=($new_ver)"
-				} else {
-					$line
+			let pkgbuild_path = $"($env.PWD)/PKGBUILD"
+			let content = (
+				open $pkgbuild_path
+				| lines
+				| each { |line|
+					if ($line | str starts-with "pkgver=") {
+						$"pkgver=($new_ver)"
+					} else {
+						$line
+					}
 				}
-			}
-			| str join "\n"
-			| save -f PKGBUILD
-			print "   ✅ PKGBUILD updated"
+				| str join "\n"
+			)
+			$"($content)\n" | save -f $pkgbuild_path
+			print $"   ✅ PKGBUILD updated - saved to ($pkgbuild_path)"
 		}
 		print ""
 
@@ -216,6 +219,7 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 		if $dry_run {
 			print "   [DRY-RUN] Would run: updpkgsums && makepkg --printsrcinfo > .SRCINFO"
 		} else {
+			print $"   Working directory: ($env.PWD)"
 			print "   Running updpkgsums..."
 			let updpkgsums_result = (^updpkgsums | complete)
 			if $updpkgsums_result.exit_code != 0 {
@@ -228,7 +232,13 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 			print "   ✅ Checksums updated"
 
 			print "   Generating .SRCINFO..."
-			let srcinfo_result = (^makepkg --printsrcinfo | save -f .SRCINFO | complete)
+			let srcinfo_result = try {
+				let output = ^makepkg --printsrcinfo
+				$output | save -f .SRCINFO
+				{ exit_code: 0, stderr: "" }
+			} catch { |err|
+				{ exit_code: 1, stderr: $err.msg }
+			}
 			if $srcinfo_result.exit_code != 0 {
 				print $"::error::❌ makepkg --printsrcinfo failed: ($srcinfo_result.stderr)"
 				cd $original_dir
@@ -239,6 +249,69 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 			print "   ✅ .SRCINFO generated"
 		}
 		print ""
+
+		# Push to AUR
+		# print "🚀 Pushing to AUR..."
+		# if $dry_run {
+		# 	print $"   [DRY-RUN] Would clone, copy all files, commit, and push to aur@aur.archlinux.org:($pkgname).git"
+		# } else {
+		# 	let temp_dir = (mktemp -d)
+		# 	print $"   Cloning AUR repo to ($temp_dir)..."
+		#
+		# 	let clone_result = (
+		# 		^git clone $"ssh://aur@aur.archlinux.org/($pkgname).git" $temp_dir
+		# 		| complete
+		# 	)
+		#
+		# 	if $clone_result.exit_code != 0 {
+		# 		print $"::error::❌ Failed to clone AUR repo: ($clone_result.stderr)"
+		# 		rm -rf $temp_dir
+		# 		cd $original_dir
+		# 		$error_count = $error_count + 1
+		# 		print "::endgroup::"
+		# 		continue
+		# 	}
+		# 	print "   ✅ Cloned AUR repository"
+		#
+		# 	# Copy all files from package directory to temp dir (including hidden files like .SRCINFO)
+		# 	print "   Copying all files from package directory..."
+		# 	# Use rsync to properly handle hidden files
+		# 	^rsync -av --exclude='.git' ./ $"($temp_dir)/"
+		# 	print "   ✅ Files copied"
+		# 	# Work in temp dir
+		# 	cd $temp_dir
+		#
+		# 	# Configure git
+		# 	print $"   Configuring git user: ($USER.NAME)"
+		# 	git config user.name $USER.NAME
+		# 	git config user.email $USER.EMAIL
+		#
+		# 	# Commit and push
+		# 	print "   Committing changes..."
+		# 	# Add all files to commit
+		# 	git add -A
+		# 	let commit_result = (git commit -m $"chore: update ($pkgname) to ($new_ver)" | complete)
+		#
+		# 	if $commit_result.exit_code == 0 {
+		# 		print "   ✅ Committed: ($commit_result.stdout | str trim)"
+		#
+		# 		print "   Pushing to AUR..."
+		# 		let push_result = (git push origin master | complete)
+		# 		if $push_result.exit_code != 0 {
+		# 			print $"::error::❌ Failed to push to AUR: ($push_result.stderr)"
+		# 		} else {
+		# 			print "   ✅ Pushed to AUR"
+		# 		}
+		# 	} else {
+		# 		print "   ℹ️ No changes to commit (already up to date in AUR)"
+		# 	}
+		#
+		# 	# Clean up temp dir and return to original
+		# 	cd $original_dir
+		# 	rm -rf $temp_dir
+		# 	print "   🗑️  Cleaned up temp directory"
+		# }
+		# print ""
 
 		# Track updated package
 		$"($pkgname)\n" | save -a $updated_file
