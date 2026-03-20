@@ -1,10 +1,10 @@
-# Maintainer (aarch64): mdrv
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
 # Based on ospray from AUR by Bruno Pagani <archange@archlinux.org>
 pkgname=ospray
 pkgver=3.2.0
 pkgrel=1
-pkgdesc="Ray Tracing Based Rendering Engine for High-Fidelity Visualization"
-arch=('aarch64')
+pkgdesc="Ray Tracing Based Rendering Engine for high-fidelity visualization"
+arch=('x86_64' 'aarch64')
 url="https://www.ospray.org/"
 license=('Apache-2.0')
 depends=(
@@ -15,16 +15,17 @@ depends=(
 optdepends=()
 provides=('ospray')
 conflicts=('ospray')
-source=("ospray-${pkgver}-aarch64.tar.gz::https://github.com/ospray/OSPRay/releases/download/v${pkgver}/ospray-${pkgver}.aarch64.linux.tar.gz")
-sha256sums=('SKIP')
+source_x86_64=("ospray-${pkgver}-x86_64.tar.gz::https://github.com/ospray/OSPRay/releases/download/v${pkgver}/ospray-${pkgver}.x86_64.linux.tar.gz")
+source_aarch64=("ospray-${pkgver}-aarch64.tar.gz::https://github.com/ospray/OSPRay/releases/download/v${pkgver}/ospray-${pkgver}.aarch64.linux.tar.gz")
+sha256sums_x86_64=('d8670e69b4762e24f2aa83629af897e8f33ea1c724e17e613942c0ccc1c723be')
+sha256sums_aarch64=('SKIP')
 
 build() {
-  cd "${srcdir}/ospray-${pkgver}.aarch64.linux"
-  # No build needed for prebuilt binary package
+  cd "${srcdir}/ospray-${pkgver}.${CARCH}.linux"
 }
 
 package() {
-  cd "${srcdir}/ospray-${pkgver}.aarch64.linux"
+  cd "${srcdir}/ospray-${pkgver}.${CARCH}.linux"
 
   # Install binaries
   install -Dm755 bin/* -t "${pkgdir}/usr/bin/"

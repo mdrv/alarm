@@ -18,6 +18,7 @@ permissions:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04-arm
     defaults:
       run:
@@ -68,13 +69,13 @@ jobs:
         retention-days: 7
 
     - name: Upload Pages artifact
-      if: github.ref == 'refs/heads/main'
+      if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'
       uses: actions/upload-pages-artifact@v3
       with:
         path: public
 
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'
     needs: build
     runs-on: ubuntu-latest
     environment:

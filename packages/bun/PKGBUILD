@@ -4,18 +4,20 @@ pkgname=bun
 pkgver=1.3.11
 pkgrel=1
 pkgdesc="All-in-one JavaScript runtime built for speed, with bundler, transpiler, test runner, and package manager. Includes bunx and shell completions"
-arch=('aarch64')
+arch=('x86_64' 'aarch64')
 url="https://github.com/oven-sh/bun"
 license=('MIT')
 provides=('bun')
 conflicts=('bun')
-source=("bun-aarch64-${pkgver}.zip::https://github.com/oven-sh/bun/releases/download/bun-v${pkgver}/bun-linux-aarch64.zip"
-        "LICENSE")
-sha256sums=('d13944da12a53ecc74bf6a720bd1d04c4555c038dfe422365356a7be47691fdf'
-            '8ad9d37e1e165dfc9c6936162d1894f54bfd44e3b8831a10bf16cc6eb4c0af53')
+source_aarch64=("bun-aarch64-${pkgver}.zip::https://github.com/oven-sh/bun/releases/download/bun-v${pkgver}/bun-linux-aarch64.zip")
+source_x86_64=("bun-x64-${pkgver}.zip::https://github.com/oven-sh/bun/releases/download/bun-v${pkgver}/bun-linux-x64.zip")
+source=("LICENSE")
+sha256sums_x86_64=('8611ba935af886f05a6f38740a15160326c15e5d5d07adef966130b4493607ed')
+sha256sums_aarch64=('d13944da12a53ecc74bf6a720bd1d04c4555c038dfe422365356a7be47691fdf')
+sha256sums=('8ad9d37e1e165dfc9c6936162d1894f54bfd44e3b8831a10bf16cc6eb4c0af53')
 
 build() {
-  cd "bun-linux-aarch64"
+	cd "${srcdir}/bun-linux-${CARCH/x86_64/x64}"
   install -dm755 "completions"
   SHELL=zsh "./bun" completions >"completions/bun.zsh"
   SHELL=bash "./bun" completions >"completions/bun.bash"
@@ -23,7 +25,7 @@ build() {
 }
 
 package() {
-  cd "${srcdir}/bun-linux-aarch64"
+	cd "${srcdir}/bun-linux-${CARCH/x86_64/x64}"
   install -Dm755 "./bun" "${pkgdir}/usr/bin/bun"
   ln -s bun "${pkgdir}/usr/bin/bunx"
   install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
