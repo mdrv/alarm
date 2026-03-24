@@ -39,8 +39,9 @@ jobs:
           -w /work \
           -e HOST_UID="${{ steps.user.outputs.uid }}" \
           -e HOST_GID="${{ steps.user.outputs.gid }}" \
+          --entrypoint /bin/bash \
           ghcr.io/menci/archlinuxarm:base-devel \
-          bash /work/.github/scripts/build-aarch64.sh
+          -c "pacman -Sy --noconfirm nushell && nu /work/.github/scripts/build-aarch64.nu"
 
     - name: Generate HTML indexes
       run: |
@@ -61,12 +62,13 @@ jobs:
         echo "Index files generated and packages copied to public/"
 
     - name: Upload build artifacts
-      if: always()
+      if: success() || (failure() && hashFiles('public/**') != '')
       uses: actions/upload-artifact@v4
       with:
         name: aarch64-packages
         path: public/
         retention-days: 7
+        if-no-files-found: error
 
     - name: Upload Pages artifact
       if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'

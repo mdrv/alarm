@@ -2,21 +2,29 @@
 	{
 		"pkgname": "bun",
 		"repo": "https://github.com/oven-sh/bun",
-		"path": "packages/bun"
+		"path": "packages/bun",
+		"build": true,
+		"priority": 10
 	},
 	{
 		"pkgname": "ospray",
 		"repo": "https://github.com/RenderKit/ospray",
-		"path": "packages/ospray"
+		"path": "packages/ospray",
+		"build": false,
+		"priority": 1
 	},
 	{
 		"pkgname": "runit",
 		"update": "runit",
-		"path": "packages/runit"
+		"path": "packages/runit",
+		"build": true,
+		"priority": 10
 	},
 	{
 		"pkgname": "tofi",
 		"repo": "https://github.com/philj56/tofi",
-		"path": "packages/tofi"
+		"path": "packages/tofi",
+		"build": false,
+		"priority": 10
 	}
 ]
