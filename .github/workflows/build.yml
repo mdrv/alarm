@@ -41,7 +41,7 @@ jobs:
           -e HOST_GID="${{ steps.user.outputs.gid }}" \
           --entrypoint /bin/bash \
           ghcr.io/menci/archlinuxarm:base-devel \
-          -c "pacman -Sy --noconfirm nushell && nu /work/.github/scripts/build-aarch64.nu"
+          -c "pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build-aarch64.nu"
 
     - name: Generate HTML indexes
       run: |
