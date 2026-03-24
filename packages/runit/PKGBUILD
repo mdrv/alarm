@@ -1,0 +1,49 @@
+# Maintainer: Umar Alfarouk <https://alfarouk.id>
+
+pkgname=runit
+pkgver=2.3.1
+pkgrel=1
+pkgdesc="A UNIX init scheme with service supervision"
+arch=('x86_64' 'aarch64')
+url="http://smarden.org/runit/"
+license=('BSD')
+depends=('glibc')
+makedepends=('coreutils' 'sed')
+provides=('runit')
+conflicts=('runit-systemd' 'runit-musl')
+source=("https://smarden.org/runit/runit-${pkgver}.tar.gz")
+sha256sums=('634f23c8c4d1d440043be0fe928ddf904626289e97bfe7c5826e93aaf2cc6fe9')
+
+prepare() {
+  cd "$srcdir/admin/runit-$pkgver/src"
+
+  # Set default service path to /var/service
+  sed -i -e 's:^char \*varservice ="/service/";$:char \*varservice ="/var/service/";:' sv.c
+
+  # Do not build statically
+  sed -i -e 's/ -static//g' Makefile
+
+  # Add custom CFLAGS and LDFLAGS instead of predefined ones
+  # Use GNU89 dialect to avoid compilation issues
+  echo "${CC:-gcc} -std=gnu89 $CFLAGS" > conf-cc
+  echo "${CC:-gcc -s} $LDFLAGS" > conf-ld
+}
+
+build() {
+  cd "$srcdir/admin/runit-$pkgver/src"
+  make
+}
+
+check() {
+  cd "$srcdir/admin/runit-$pkgver/src"
+  make check
+}
+
+package() {
+  cd "$srcdir/admin/runit-$pkgver"
+  install -dm755 "$pkgdir/var/service"
+  install -Dm755 src/{chpst,runit,runit-init,runsv,runsvchdir,runsvdir,sv,svlogd,utmpset} -t "$pkgdir/usr/bin"
+  install -Dm644 man/* -t "$pkgdir/usr/share/man/man8"
+  install -Dm644 doc/*.html -t "$pkgdir/usr/share/doc/runit"
+  install -Dm644 "package/COPYING" "$pkgdir/usr/share/licenses/${pkgname}/COPYING"
+}

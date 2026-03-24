@@ -34,7 +34,7 @@ def main [--dry-run] {
 	print ""
 
 	# Run update process
-	update_packages $packages $dry_run $updated_file
+	update_packages $packages $dry_run $updated_file $script_dir
 
 	# Cleanup
 	print "::group::🧹 Cleanup"
@@ -49,7 +49,7 @@ def main [--dry-run] {
 	print $"🕐 Finished at: (date now | format date '%Y-%m-%d %H:%M:%S')"
 }
 
-def update_packages [packages: list, dry_run: bool, updated_file: path] {
+def update_packages [packages: list, dry_run: bool, updated_file: path, script_dir: path] {
 	# Save original directory - we'll return here after each package
 	let original_dir = $env.PWD
 
@@ -65,12 +65,18 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 
 	for pkg in $packages {
 		let pkgname = $pkg.pkgname
-		let repo_url = $pkg.repo
+		let repo_url = if ('repo' in $pkg) { $pkg.repo } else { null }
+		let update_script = if ('update' in $pkg) { $pkg.update } else { null }
 		let pkg_dir = $pkg.path
 
 		print $"::group::🔍 ($pkgname)"
 		print $"📦 Package: ($pkgname)"
-		print $"🔗 Repository: ($repo_url)"
+		if $repo_url != null {
+			print $"🔗 Repository: ($repo_url)"
+		}
+		if $update_script != null {
+			print $"🔧 Update script: ($update_script)"
+		}
 		print $"📂 Directory: ($pkg_dir)"
 		print ""
 
@@ -107,7 +113,38 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 		# Detect git provider and fetch latest release
 		print "🌐 Checking remote repository for updates..."
 		let new_ver = (
-			if ($repo_url | str contains "github.com") {
+			if $update_script != null {
+				# Use custom update script
+				let script_path = $"($script_dir)/updates/($update_script).nu"
+
+				if not ($script_path | path exists) {
+					print $"::error::❌ Update script not found: ($script_path)"
+					cd $original_dir
+					$error_count = $error_count + 1
+					print "::endgroup::"
+					continue
+				}
+
+				let result = (^nu $script_path $pkgname | complete)
+
+				if $result.exit_code != 0 {
+					print $"::error::❌ Update script failed with exit code ($result.exit_code)"
+					cd $original_dir
+					$error_count = $error_count + 1
+					print "::endgroup::"
+					continue
+				}
+
+				if ($result.stdout | str trim) == "" {
+					print $"::error::❌ Update script returned empty output"
+					cd $original_dir
+					$error_count = $error_count + 1
+					print "::endgroup::"
+					continue
+				}
+
+				($result.stdout | str trim)
+			} else if ($repo_url | str contains "github.com") {
 				let github_repo = ($repo_url | str replace -r "^https://github.com/" "")
 
 				# Try stable releases first
@@ -169,8 +206,14 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 				$skip_count = $skip_count + 1
 				print "::endgroup::"
 				continue
-			} else {
+			} else if $repo_url != null {
 				print $"::error::❌ Unsupported git provider: ($repo_url)"
+				cd $original_dir
+				$error_count = $error_count + 1
+				print "::endgroup::"
+				continue
+			} else {
+				print $"::error::❌ No repo or update script specified"
 				cd $original_dir
 				$error_count = $error_count + 1
 				print "::endgroup::"
@@ -178,6 +221,14 @@ def update_packages [packages: list, dry_run: bool, updated_file: path] {
 			}
 		)
 		print ""
+
+		# Check if version was successfully retrieved
+		if $new_ver == null {
+			cd $original_dir
+			$error_count = $error_count + 1
+			print "::endgroup::"
+			continue
+		}
 
 		# Check if already up to date
 		if $new_ver == $current_ver {

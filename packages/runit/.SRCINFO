@@ -1,0 +1,18 @@
+pkgbase = runit
+	pkgdesc = A UNIX init scheme with service supervision
+	pkgver = 2.3.1
+	pkgrel = 1
+	url = http://smarden.org/runit/
+	arch = x86_64
+	arch = aarch64
+	license = BSD
+	makedepends = coreutils
+	makedepends = sed
+	depends = glibc
+	provides = runit
+	conflicts = runit-systemd
+	conflicts = runit-musl
+	source = https://smarden.org/runit/runit-2.3.1.tar.gz
+	sha256sums = 634f23c8c4d1d440043be0fe928ddf904626289e97bfe7c5826e93aaf2cc6fe9
+
+pkgname = runit

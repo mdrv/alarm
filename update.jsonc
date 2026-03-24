@@ -10,6 +10,11 @@
 		"path": "packages/ospray"
 	},
 	{
+		"pkgname": "runit",
+		"update": "runit",
+		"path": "packages/runit"
+	},
+	{
 		"pkgname": "tofi",
 		"repo": "https://github.com/philj56/tofi",
 		"path": "packages/tofi"
