@@ -32,10 +32,24 @@ jobs:
         echo "uid=$(id -u)" >> $GITHUB_OUTPUT
         echo "gid=$(id -g)" >> $GITHUB_OUTPUT
 
+    - name: Compute cache key week
+      id: date
+      run: echo "week=$(date +%Y-%U)" >> $GITHUB_OUTPUT
+
+    - name: Cache pacman packages
+      uses: actions/cache@v4
+      with:
+        path: .cache/pacman
+        key: pacman-aarch64-${{ runner.arch }}-${{ hashFiles('**/PKGBUILD') }}-${{ steps.date.outputs.week }}
+        restore-keys: |
+          pacman-aarch64-${{ runner.arch }}-
+
     - name: Build packages in Arch Linux ARM container
       run: |
+        mkdir -p .cache/pacman
         docker run --rm \
           -v ${{ github.workspace }}:/work \
+          -v ${{ github.workspace }}/.cache/pacman:/var/cache/pacman/pkg \
           -w /work \
           -e HOST_UID="${{ steps.user.outputs.uid }}" \
           -e HOST_GID="${{ steps.user.outputs.gid }}" \
