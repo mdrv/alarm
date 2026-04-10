@@ -1,7 +1,7 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 # Based on bun-bin from AUR by Noel Jacob <noeljacob91 at gmail dot com>
 pkgname=bun
-pkgver=1.3.11
+pkgver=1.3.12
 pkgrel=1
 pkgdesc="All-in-one JavaScript runtime built for speed, with bundler, transpiler, test runner, and package manager. Includes bunx and shell completions"
 arch=('x86_64' 'aarch64')
@@ -12,9 +12,9 @@ conflicts=('bun')
 source_aarch64=("bun-aarch64-${pkgver}.zip::https://github.com/oven-sh/bun/releases/download/bun-v${pkgver}/bun-linux-aarch64.zip")
 source_x86_64=("bun-x64-${pkgver}.zip::https://github.com/oven-sh/bun/releases/download/bun-v${pkgver}/bun-linux-x64.zip")
 source=("LICENSE")
-sha256sums_x86_64=('8611ba935af886f05a6f38740a15160326c15e5d5d07adef966130b4493607ed')
-sha256sums_aarch64=('d13944da12a53ecc74bf6a720bd1d04c4555c038dfe422365356a7be47691fdf')
 sha256sums=('8ad9d37e1e165dfc9c6936162d1894f54bfd44e3b8831a10bf16cc6eb4c0af53')
+sha256sums_x86_64=('11dc3ee11bc1695e149737c6ca3d5619302cf4346e6b8a6ec7988967ef01ddc5')
+sha256sums_aarch64=('c40bc0ebca11bde7d75af497a654a874d0c7fd8d6a8d6031c173c10c9064297b')
 
 build() {
 	cd "${srcdir}/bun-linux-${CARCH/x86_64/x64}"
