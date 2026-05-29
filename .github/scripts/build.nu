@@ -9,7 +9,8 @@ const PACKAGER = "Umar Alfarouk <medrivia@gmail.com>"
 const OUTPUT_DIR = "/work"
 const PACKAGES_DIR = "/home/builder/packages"
 const PREBUILT_DIR = "/work/prebuilt"
-const ARCH_DIR = "/work/aarch64"
+mut ARCH_DIR = $env.TARGET_ARCH? | default "aarch64"
+$ARCH_DIR = $"/work/($ARCH_DIR)"
 
 log info "Starting Arch Linux ARM Package Builder"
 
@@ -38,10 +39,17 @@ log info "Configuring sudo for builder..."
 "builder ALL=(ALL) NOPASSWD: /usr/bin/pacman" | save -f /etc/sudoers.d/builder
 ^chmod 440 /etc/sudoers.d/builder
 
-# Import official Arch Linux ARM keyring
-log info "Importing Arch Linux ARM keyring..."
-^pacman-key --init
-^pacman-key --populate archlinuxarm
+# Import keyring (Arch Linux ARM or standard Arch depending on target)
+let target_arch = ($env.TARGET_ARCH? | default "aarch64")
+if $target_arch == "aarch64" {
+	log info "Importing Arch Linux ARM keyring..."
+	^pacman-key --init
+	^pacman-key --populate archlinuxarm
+} else {
+	log info "Importing Arch Linux keyring..."
+	^pacman-key --init
+	^pacman-key --populate archlinux
+}
 
 # Upgrade system packages
 log info "Upgrading system packages..."
@@ -74,6 +82,15 @@ let packages = (
 	| sort-by priority
 )
 
+# Filter packages by target architecture (arch is array of supported arches)
+let packages = (
+	$packages
+	| where { |pkg|
+		let pkg_arch = ($pkg.arch? | default ["aarch64", "x86_64"])
+		$target_arch in $pkg_arch
+	}
+)
+
 log info $"Found ($packages | length) package\(s)"
 log info $"Packages: ($packages | get pkgname | str join ', ')"
 
@@ -89,10 +106,12 @@ mut build_failed = false
 
 if ($PREBUILT_DIR | path exists) {
 	log info $"Copying prebuilt packages from ($PREBUILT_DIR)..."
-	
+
+	let arch_pattern = (['(' $target_arch '|any)\.pkg\.tar\.(zst|xz)$'] | str join)
+
 	let prebuilt_files = (
 		ls $PREBUILT_DIR
-		| where name =~ '\.pkg\.tar\.(zst|xz)$'
+		| where name =~ $arch_pattern
 	)
 	
 	if ($prebuilt_files | length) > 0 {

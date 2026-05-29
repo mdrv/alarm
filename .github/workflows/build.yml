@@ -1,4 +1,4 @@
-name: Build AArch64 Arch Repo
+name: Build Arch Repo
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: aarch64-repo
+  group: arch-repo
   cancel-in-progress: true
 
 permissions:
@@ -17,7 +17,7 @@ permissions:
   id-token: write
 
 jobs:
-  build:
+  build-aarch64:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04-arm
     defaults:
@@ -44,7 +44,7 @@ jobs:
         restore-keys: |
           pacman-aarch64-${{ runner.arch }}-
 
-    - name: Build packages in Arch Linux ARM container
+    - name: Build aarch64 packages
       run: |
         mkdir -p .cache/pacman
         docker run --rm \
@@ -53,51 +53,124 @@ jobs:
           -w /work \
           -e HOST_UID="${{ steps.user.outputs.uid }}" \
           -e HOST_GID="${{ steps.user.outputs.gid }}" \
+          -e TARGET_ARCH=aarch64 \
           --entrypoint /bin/bash \
           ghcr.io/menci/archlinuxarm:base-devel \
-          -c "pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build-aarch64.nu"
+          -c "pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build.nu"
 
-    - name: Generate HTML indexes
-      run: |
-        # Download web-indexer for ARM64
-        curl -fsSL https://github.com/joshbeard/web-indexer/releases/download/0.9.0/web-indexer_0.9.0_linux_arm64.tar.gz -o web-indexer.tar.gz
-        tar -xzf web-indexer.tar.gz web-indexer
-        chmod +x web-indexer
-        
-        # Prepare public directory with built packages
-        mkdir -p public
-        cp -a aarch64 public/
-        
-        # Generate HTML indexes
-        # We index the files within the public directory so links are relative to the site root
-        ./web-indexer --source public --target public --theme nord --dirs-first --title "Index of /"
-        ./web-indexer --source public/aarch64 --target public/aarch64 --theme nord --dirs-first --title "Index of /aarch64"
-
-        echo "Index files generated and packages copied to public/"
-
-    - name: Upload build artifacts
-      if: success() || (failure() && hashFiles('public/**') != '')
+    - name: Upload aarch64 artifacts
+      if: success() || (failure() && hashFiles('aarch64/**') != '')
       uses: actions/upload-artifact@v4
       with:
         name: aarch64-packages
-        path: public/
+        path: aarch64/
         retention-days: 7
-        if-no-files-found: error
+        if-no-files-found: warn
 
-    - name: Upload Pages artifact
-      if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'
-      uses: actions/upload-pages-artifact@v3
+  build-x86_64:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Get runner user UID/GID
+      id: user
+      run: |
+        echo "uid=$(id -u)" >> $GITHUB_OUTPUT
+        echo "gid=$(id -g)" >> $GITHUB_OUTPUT
+
+    - name: Compute cache key week
+      id: date
+      run: echo "week=$(date +%Y-%U)" >> $GITHUB_OUTPUT
+
+    - name: Cache pacman packages
+      uses: actions/cache@v4
       with:
-        path: public
+        path: .cache/pacman-x86_64
+        key: pacman-x86_64-${{ runner.arch }}-${{ hashFiles('**/PKGBUILD') }}-${{ steps.date.outputs.week }}
+        restore-keys: |
+          pacman-x86_64-${{ runner.arch }}-
+
+    - name: Build x86_64 packages
+      run: |
+        mkdir -p .cache/pacman-x86_64
+        docker run --rm \
+          -v ${{ github.workspace }}:/work \
+          -v ${{ github.workspace }}/.cache/pacman-x86_64:/var/cache/pacman/pkg \
+          -w /work \
+          -e HOST_UID="${{ steps.user.outputs.uid }}" \
+          -e HOST_GID="${{ steps.user.outputs.gid }}" \
+          -e TARGET_ARCH=x86_64 \
+          --entrypoint /bin/bash \
+          archlinux:base-devel \
+          -c "pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build.nu"
+
+    - name: Upload x86_64 artifacts
+      if: success() || (failure() && hashFiles('x86_64/**') != '')
+      uses: actions/upload-artifact@v4
+      with:
+        name: x86_64-packages
+        path: x86_64/
+        retention-days: 7
+        if-no-files-found: warn
 
   deploy:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main'
-    needs: build
+    needs: [build-aarch64, build-x86_64]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+    - uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Prepare public directory
+      run: |
+        mkdir -p public/aarch64 public/x86_64
+        
+        # Copy aarch64 packages (if built)
+        if [ -d "artifacts/aarch64-packages" ]; then
+          cp -a artifacts/aarch64-packages/* public/aarch64/
+        fi
+        
+        # Copy x86_64 packages (if built)
+        if [ -d "artifacts/x86_64-packages" ]; then
+          cp -a artifacts/x86_64-packages/* public/x86_64/
+        fi
+
+    - name: Generate HTML indexes
+      run: |
+        # Download web-indexer (x86_64 binary since we're on ubuntu-latest)
+        curl -fsSL https://github.com/joshbeard/web-indexer/releases/download/0.9.0/web-indexer_0.9.0_linux_amd64.tar.gz -o web-indexer.tar.gz
+        tar -xzf web-indexer.tar.gz web-indexer
+        chmod +x web-indexer
+        
+        # Generate index for each architecture directory that has packages
+        ./web-indexer --source public --target public --theme nord --dirs-first --title "Index of /"
+        
+        if [ "$(ls -A public/aarch64 2>/dev/null)" ]; then
+          ./web-indexer --source public/aarch64 --target public/aarch64 --theme nord --dirs-first --title "Index of /aarch64"
+        fi
+        
+        if [ "$(ls -A public/x86_64 2>/dev/null)" ]; then
+          ./web-indexer --source public/x86_64 --target public/x86_64 --theme nord --dirs-first --title "Index of /x86_64"
+        fi
+
+        echo "Index files generated"
+
+    - name: Upload Pages artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: public
+
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4

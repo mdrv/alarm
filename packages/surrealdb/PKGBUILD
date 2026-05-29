@@ -1,0 +1,24 @@
+# Contributor: Dominik Schwaiger <mail@dominik-schwaiger.ch>
+# Contributor: tee < teeaur at duck dot com >
+# Contributor: tblFlip <root@tblflip.de>
+pkgname=surrealdb
+pkgver=3.1.2
+pkgrel=1
+pkgdesc="A scalable, distributed, collaborative, document-graph database, for the realtime web"
+arch=('x86_64' 'aarch64')
+url="https://download.surrealdb.com"
+license=('custom:BSL')
+depends=('gcc-libs')
+source=("LICENSE")
+source_x86_64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-amd64.tgz")
+source_aarch64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-arm64.tgz")
+options=(!debug)
+sha256sums=('98a94ac615f88370865016487b436fa404560910bd329794ed7502277a94b805')
+sha256sums_x86_64=('27fbc211ef5eb855d4f0ac142b112815bc35d679d8d5935f7756af2cea015bd4')
+sha256sums_aarch64=('c00619cc78816aab77d0e13941f41c29a5fb26323e7333ddea181c04a9ffe2c2')
+
+package() {
+	install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+	install -Dm755 "${srcdir}/surreal" "${pkgdir}/usr/bin/surreal"
+}
+# vim:set noet sts=0 sw=4 ts=4:
