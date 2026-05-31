@@ -38,5 +38,13 @@
 		"arch": ["aarch64"],
 		"build": false,
 		"priority": 10
+	},
+	{
+		"pkgname": "caddy-mdrv",
+		"repo": "https://github.com/caddyserver/caddy",
+		"path": "packages/caddy-mdrv",
+		"arch": ["aarch64", "x86_64"],
+		"build": true,
+		"priority": 10
 	}
 ]

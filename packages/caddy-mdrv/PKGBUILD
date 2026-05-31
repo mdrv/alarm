@@ -1,0 +1,50 @@
+# Maintainer: mdrv
+# Generated from build/presets.jsonc preset: default
+# Module count: 10
+
+pkgname=caddy-mdrv
+pkgver=2.11.3
+pkgrel=1
+pkgdesc="Caddy with mdrv modules (default preset)"
+arch=('x86_64' 'aarch64')
+url="https://caddyserver.com"
+license=('Apache-2.0')
+depends=('glibc')
+makedepends=('go' 'git')
+provides=('caddy')
+conflicts=('caddy')
+source=('LICENSE')
+options=(!debug)
+sha256sums=('3e1f339d9a5a09e0bd2a55a52a457b088cc0a0a88102cccd82351588af40ce2d')
+
+build() {
+  cd "$srcdir"
+  export CGO_ENABLED=1
+  export GOFLAGS=""
+  export GOPATH="$(go env GOPATH)"
+  export PATH="$GOPATH/bin:$PATH"
+
+  if ! command -v xcaddy >/dev/null; then
+    go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+  fi
+
+  local modules=(
+  --with github.com/hairyhenderson/caddy-teapot-module
+  --with github.com/mholt/caddy-ratelimit
+  --with github.com/greenpau/caddy-security
+  --with github.com/xupefei/caddy-simple-password
+  --with github.com/caddyserver/cache-handler
+  --with github.com/steffenbusch/caddy-cron-matcher
+  --with github.com/steffenbusch/caddy-bot-barrier
+  --with github.com/anujc4/caddy-geoblock
+  --with git.gorbe.io/caddy/geoip
+  --with pkg.jsn.cam/caddy-defender
+  )
+
+  xcaddy build "v${pkgver}" --output "caddy" "${modules[@]}"
+}
+
+package() {
+  install -Dm755 "$srcdir/caddy" "$pkgdir/usr/bin/caddy"
+  install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/${pkgname}/LICENSE"
+}
