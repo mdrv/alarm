@@ -1,10 +1,10 @@
 # Maintainer: mdrv
 # Generated from build/presets.jsonc preset: default
-# Module count: 10
+# Module count: 13
 
 pkgname=caddy-mdrv
 pkgver=2.11.4
-pkgrel=1
+pkgrel=2
 pkgdesc="Caddy with mdrv modules (default preset)"
 arch=('x86_64' 'aarch64')
 url="https://caddyserver.com"
@@ -20,7 +20,7 @@ sha256sums=('3e1f339d9a5a09e0bd2a55a52a457b088cc0a0a88102cccd82351588af40ce2d')
 build() {
   cd "$srcdir"
   export CGO_ENABLED=1
-  export GOFLAGS=""
+  export GOFLAGS="-tags=duckdb_use_lib"
   export GOPATH="$(go env GOPATH)"
   export PATH="$GOPATH/bin:$PATH"
 
@@ -30,6 +30,9 @@ build() {
 
   local modules=(
   --with github.com/hairyhenderson/caddy-teapot-module
+  --with github.com/mdrv/caddy-duckdb
+  --with github.com/dunglas/caddy-cbrotli
+  --with github.com/infogulch/xtemplate-caddy
   --with github.com/mholt/caddy-ratelimit
   --with github.com/greenpau/caddy-security
   --with github.com/xupefei/caddy-simple-password
