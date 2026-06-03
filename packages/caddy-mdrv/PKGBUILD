@@ -3,7 +3,7 @@
 # Module count: 10
 
 pkgname=caddy-mdrv
-pkgver=2.11.3
+pkgver=2.11.4
 pkgrel=1
 pkgdesc="Caddy with mdrv modules (default preset)"
 arch=('x86_64' 'aarch64')

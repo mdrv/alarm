@@ -1,6 +1,6 @@
 pkgbase = caddy-mdrv
 	pkgdesc = Caddy with mdrv modules (default preset)
-	pkgver = 2.11.3
+	pkgver = 2.11.4
 	pkgrel = 1
 	url = https://caddyserver.com
 	arch = x86_64
@@ -13,6 +13,6 @@ pkgbase = caddy-mdrv
 	conflicts = caddy
 	options = !debug
 	source = LICENSE
-	sha256sums = SKIP
+	sha256sums = 3e1f339d9a5a09e0bd2a55a52a457b088cc0a0a88102cccd82351588af40ce2d
 
 pkgname = caddy-mdrv
