@@ -1,7 +1,7 @@
 pkgbase = caddy-mdrv
 	pkgdesc = Caddy with mdrv modules (default preset)
 	pkgver = 2.11.4
-	pkgrel = 2
+	pkgrel = 4
 	url = https://caddyserver.com
 	arch = x86_64
 	arch = aarch64
