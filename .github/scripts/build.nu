@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-use std log
+use std/log
 
 # Arch Linux ARM Package Builder - Nushell version
 # Reads configuration from update.jsonc and builds/copies packages

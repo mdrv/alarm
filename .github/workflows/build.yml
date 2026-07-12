@@ -37,7 +37,7 @@ jobs:
       run: echo "week=$(date +%Y-%U)" >> $GITHUB_OUTPUT
 
     - name: Cache pacman packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: .cache/pacman
         key: pacman-aarch64-${{ runner.arch }}-${{ hashFiles('**/PKGBUILD') }}-${{ steps.date.outputs.week }}
@@ -56,7 +56,7 @@ jobs:
           -e TARGET_ARCH=aarch64 \
           --entrypoint /bin/bash \
           ghcr.io/menci/archlinuxarm:base-devel \
-          -c "pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build.nu"
+          -c "sed -i '/\\[options\\]/a DisableSandbox' /etc/pacman.conf && pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build.nu"
 
     - name: Upload aarch64 artifacts
       if: success() || (failure() && hashFiles('aarch64/**') != '')
@@ -87,7 +87,7 @@ jobs:
       run: echo "week=$(date +%Y-%U)" >> $GITHUB_OUTPUT
 
     - name: Cache pacman packages
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: .cache/pacman-x86_64
         key: pacman-x86_64-${{ runner.arch }}-${{ hashFiles('**/PKGBUILD') }}-${{ steps.date.outputs.week }}
@@ -106,7 +106,7 @@ jobs:
           -e TARGET_ARCH=x86_64 \
           --entrypoint /bin/bash \
           archlinux:base-devel \
-          -c "pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build.nu"
+          -c "sed -i '/\\[options\\]/a DisableSandbox' /etc/pacman.conf && pacman -Syu --noconfirm nushell && nu /work/.github/scripts/build.nu"
 
     - name: Upload x86_64 artifacts
       if: success() || (failure() && hashFiles('x86_64/**') != '')
