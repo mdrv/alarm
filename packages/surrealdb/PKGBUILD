@@ -2,7 +2,7 @@
 # Contributor: tee < teeaur at duck dot com >
 # Contributor: tblFlip <root@tblflip.de>
 pkgname=surrealdb
-pkgver=3.2.0
+pkgver=3.2.1
 pkgrel=1
 pkgdesc="A scalable, distributed, collaborative, document-graph database, for the realtime web"
 arch=('x86_64' 'aarch64')
@@ -14,8 +14,8 @@ source_x86_64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-amd64.tgz")
 source_aarch64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-arm64.tgz")
 options=(!debug)
 sha256sums=('98a94ac615f88370865016487b436fa404560910bd329794ed7502277a94b805')
-sha256sums_x86_64=('9c0a9ae29444f3b144a1261fc923116b0e10a3cbadc478cabc9009b3beb9bb3a')
-sha256sums_aarch64=('8dc83157d74d906e573d80b0c33c6fb80185ceb58c9553ea1768b8d7b4c7703c')
+sha256sums_x86_64=('7036eafd9ba07c3720d25a3201f780b81ec82eb2b4dcb56c9ea81b87655644e7')
+sha256sums_aarch64=('05f98d90f0b5f3fd5e32c0658cca62512e10c8bdc0c089b1b05b33987208f7c5')
 
 package() {
 	install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
