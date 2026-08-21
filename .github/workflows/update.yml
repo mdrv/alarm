@@ -38,4 +38,7 @@ jobs:
           ssh-keyscan -H aur.archlinux.org >> /home/builder/.ssh/known_hosts 2>/dev/null || true
 
       - name: Update packages
+        env:
+          GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: su - builder -c "cd '$GITHUB_WORKSPACE' && GITHUB_API_TOKEN='$GITHUB_API_TOKEN' nu update.nu"
         run: su - builder -c "cd '$GITHUB_WORKSPACE' && nu update.nu"

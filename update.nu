@@ -146,6 +146,11 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 				($result.stdout | str trim)
 			} else if ($repo_url | str contains "github.com") {
 				let github_repo = ($repo_url | str replace -r "^https://github.com/" "")
+				let gh_headers = if ($env.GITHUB_API_TOKEN? | is-empty) { {} } else {
+					{ Authorization: $"Bearer ($env.GITHUB_API_TOKEN)", Accept: "application/vnd.github+json", X-GitHub-Api-Version: "2022-11-28" }
+				}
+				print $"   🔑 Using authenticated GitHub API: ($gh_headers != {})"
+
 
 				# Try stable releases first
 				let latest_api = $"https://api.github.com/repos/($github_repo)/releases/latest"
@@ -153,8 +158,9 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 
 				let latest_result = (
 					try {
-						http get $latest_api
+						http get -H $gh_headers $latest_api
 					} catch { |err|
+						print $"   ::warning::⚠️ Stable releases request failed: ($err.msg)"
 						{ tag_name: "null" }
 					}
 				)
@@ -167,8 +173,9 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 
 					let all_result = (
 						try {
-							http get $all_api
+							http get -H $gh_headers $all_api
 						} catch { |err|
+							print $"   ::warning::⚠️ Pre-release list request failed: ($err.msg)"
 							[]
 						}
 					)
