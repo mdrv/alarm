@@ -4,12 +4,12 @@
 
 pkgname=caddy-mdrv
 pkgver=2.11.4
-pkgrel=4
+pkgrel=5
 pkgdesc="Caddy with mdrv modules (default preset)"
 arch=('x86_64' 'aarch64')
 url="https://caddyserver.com"
 license=('Apache-2.0')
-depends=('glibc')
+depends=('brotli' 'libgcc' 'libstdc++')
 makedepends=('go' 'git')
 provides=('caddy')
 conflicts=('caddy')
@@ -46,9 +46,16 @@ build() {
   )
 
   xcaddy build "v${pkgver}" --output "caddy" "${modules[@]}"
+
+  ./caddy completion bash > caddy.bash
+  ./caddy completion zsh > caddy.zsh
+  ./caddy completion fish > caddy.fish
 }
 
 package() {
   install -Dm755 "$srcdir/caddy" "$pkgdir/usr/bin/caddy"
   install -Dm644 "$srcdir/LICENSE" "$pkgdir/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "$srcdir/caddy.bash" "${pkgdir}/usr/share/bash-completion/completions/caddy"
+  install -Dm644 "$srcdir/caddy.zsh" "${pkgdir}/usr/share/zsh/site-functions/_caddy"
+  install -Dm644 "$srcdir/caddy.fish" "${pkgdir}/usr/share/fish/vendor_completions.d/caddy.fish"
 }

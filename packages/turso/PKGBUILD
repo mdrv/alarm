@@ -1,0 +1,23 @@
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
+# Based on turso-bin from AUR by aarto <aarto@aur.archlinux.org>
+
+pkgname=turso
+pkgver=0.7.2
+pkgrel=1
+pkgdesc="In-process SQL database engine compatible with SQLite"
+arch=('x86_64' 'aarch64')
+url="https://github.com/tursodatabase/turso"
+license=('MIT')
+depends=('libgcc')
+conflicts=('turso-bin')
+options=('!debug')
+source_x86_64=("$pkgname-x86_64-$pkgver.tar.xz::$url/releases/download/v$pkgver/turso_cli-x86_64-unknown-linux-gnu.tar.xz")
+source_aarch64=("$pkgname-aarch64-$pkgver.tar.xz::$url/releases/download/v$pkgver/turso_cli-aarch64-unknown-linux-gnu.tar.xz")
+sha256sums_x86_64=('321e401e44f7ee8ea656caff0f85304025f7e905acafe7bedf6a9304f1af1783')
+sha256sums_aarch64=('e13b2017961173a3280dfed64d5e76d6a17e5b30960540da991df20fd0455f10')
+
+package() {
+  cd "$srcdir/turso_cli-$CARCH-unknown-linux-gnu"
+  install -Dm755 tursodb "$pkgdir/usr/bin/tursodb"
+  install -Dm644 LICENSE.md "$pkgdir/usr/share/licenses/$pkgname/LICENSE.md"
+}

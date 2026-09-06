@@ -16,7 +16,7 @@ Server = https://mdrv.github.io/alarm/aarch64
 
 ### x86_64
 
-Only **surrealdb** is available for x86_64 (other packages are already in official repositories).
+Several packages are also available for x86_64 (see list below).
 
 ```ini
 [mdrv]
@@ -40,10 +40,14 @@ sudo pacman -Syu
 - **runit** - UNIX init scheme with service supervision
 - **surrealdb** - Scalable, distributed, collaborative document-graph database
 - **tofi** - Tiny rofi / dmenu replacement for wlroots-based Wayland compositors
+- **turso** - In-process SQL database engine compatible with SQLite
 
 ### x86_64
 
+- **bun** - Fast JavaScript runtime, bundler, test runner, and package manager
+- **caddy-mdrv** - Caddy web server with extra modules
 - **surrealdb** - Scalable, distributed, collaborative document-graph database
+- **turso** - In-process SQL database engine compatible with SQLite
 
 ## Package Signing
 

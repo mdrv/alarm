@@ -1,14 +1,15 @@
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
 # Contributor: Dominik Schwaiger <mail@dominik-schwaiger.ch>
 # Contributor: tee < teeaur at duck dot com >
 # Contributor: tblFlip <root@tblflip.de>
 pkgname=surrealdb
 pkgver=3.2.4
-pkgrel=1
+pkgrel=2
 pkgdesc="A scalable, distributed, collaborative, document-graph database, for the realtime web"
 arch=('x86_64' 'aarch64')
 url="https://download.surrealdb.com"
-license=('custom:BSL')
-depends=('gcc-libs')
+license=('BUSL-1.1')
+depends=('libgcc' 'libstdc++')
 source=("LICENSE")
 source_x86_64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-amd64.tgz")
 source_aarch64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-arm64.tgz")

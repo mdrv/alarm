@@ -98,6 +98,19 @@ package() {
 }
 ```
 
+## PKGBUILD Correctness
+
+Audit rules (verified against real binaries via `readelf -d <elf> | grep NEEDED`):
+
+- **Never list `glibc` in depends** — it is always installed; namcap flags it as redundant.
+- **`gcc-libs` is deprecated.** Map NEEDED entries directly: `libgcc_s.so.1` → `libgcc`, `libstdc++.so.6` → `libstdc++` (only when a _direct_ NEEDED entry, i.e. the binary itself is C++/links C++ libs).
+- **Audit every shipped ELF** (binaries _and_ bundled `*.so`), not just the main binary; `ldd` shows the transitive tree and misses `dlopen`ed libs — `readelf -d` is ground truth.
+- **Example/optional binaries** (MPI demos, GL viewers) go in `optdepends`, not `depends`.
+- **Tagged-release sources get real sha256 checksums** — never `SKIP`. Cross-check against upstream `.sha256` sidecars when published.
+- **Bump `pkgrel` whenever depends/license/conflicts change** — metadata is baked into `.PKGINFO`; without a bump, pacman never updates users.
+- **Licenses use SPDX identifiers** (e.g. `BUSL-1.1`, not `custom:BSL`).
+- Install shell completions when the tool provides them (`caddy completion`, `bun completions`, …).
+
 ## Naming Conventions
 
 ### Package Directories
