@@ -3,7 +3,7 @@
 		"pkgname": "bun",
 		"repo": "https://github.com/oven-sh/bun",
 		"path": "packages/bun",
-		"arch": ["aarch64"],
+		"arch": ["aarch64", "x86_64"],
 		"build": true,
 		"priority": 10
 	},
