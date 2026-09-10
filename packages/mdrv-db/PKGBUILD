@@ -1,0 +1,22 @@
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
+
+pkgname=mdrv-db
+pkgver=0.2.0
+pkgrel=1
+pkgdesc="Fjall durability envelope around a SQL data port and content-addressed blob store (fleet CLI)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/mdrv/mdrv-db"
+license=('MIT')
+options=('!debug')
+source_x86_64=("$pkgname-$CARCH-$pkgver.tar.gz::$url/releases/download/v$pkgver/mdrv-db-x86_64-unknown-linux-gnu.tar.gz")
+source_aarch64=("$pkgname-$CARCH-$pkgver.tar.gz::$url/releases/download/v$pkgver/mdrv-db-aarch64-unknown-linux-gnu.tar.gz")
+# TODO: run `updpkgsums` after the first GitHub release ships
+sha256sums_x86_64=('0000000000000000000000000000000000000000000000000000000000000000')
+sha256sums_aarch64=('0000000000000000000000000000000000000000000000000000000000000000')
+
+package() {
+  cd "$srcdir/mdrv-db-$CARCH-unknown-linux-gnu"
+  install -Dm755 mdrv-db "$pkgdir/usr/bin/mdrv-db"
+  install -Dm644 mdrv-db.yaml "$pkgdir/usr/share/carapace/specs/mdrv-db.yaml"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+}
