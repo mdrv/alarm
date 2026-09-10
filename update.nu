@@ -65,14 +65,14 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 
 	for pkg in $packages {
 		let pkgname = $pkg.pkgname
-		let repo_url = if ('repo' in $pkg) { $pkg.repo } else { null }
+		let pkg_url = if ('url' in $pkg) { $pkg.url } else { null }
 		let update_script = if ('update' in $pkg) { $pkg.update } else { null }
 		let pkg_dir = $pkg.path
 
 		print $"::group::🔍 ($pkgname)"
 		print $"📦 Package: ($pkgname)"
-		if $repo_url != null {
-			print $"🔗 Repository: ($repo_url)"
+		if $pkg_url != null {
+			print $"🔗 URL: ($pkg_url)"
 		}
 		if $update_script != null {
 			print $"🔧 Update script: ($update_script)"
@@ -144,8 +144,8 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 				}
 
 				($result.stdout | str trim)
-			} else if ($repo_url | str contains "github.com") {
-				let github_repo = ($repo_url | str replace -r "^https://github.com/" "")
+			} else if ($pkg_url | str contains "github.com") {
+				let github_repo = ($pkg_url | str replace -r "^https://github.com/" "")
 				let gh_headers = if ($env.GITHUB_API_TOKEN? | is-empty) { {} } else {
 					{ Authorization: $"Bearer ($env.GITHUB_API_TOKEN)", Accept: "application/vnd.github+json", X-GitHub-Api-Version: "2022-11-28" }
 				}
@@ -201,26 +201,50 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 				let ver = ($result.tag_name | str replace -r '^[^0-9]+' "" | split row ' ' | get 0)
 				print $"   Latest release: ($result.tag_name) → version: ($ver)"
 				$ver
-			} else if ($repo_url | str contains "gitlab.com") {
+			} else if ($pkg_url | str contains "crates.io/crates/") {
+				let crate_name = ($pkg_url | str replace -r '^.*/crates/' '' | str trim -c '/')
+				let api_url = $"https://crates.io/api/v1/crates/($crate_name)"
+				print $"   API URL: ($api_url)"
+
+				let resp = (
+					try {
+						http get -H { User-Agent: "alarm-update-check (medrivia@gmail.com)" } $api_url
+					} catch { |err|
+						print $"   ::warning::⚠️ crates.io request failed: ($err.msg)"
+						{ crate: { max_stable_version: null, max_version: null } }
+					}
+				)
+
+				let ver = ($resp.crate.max_stable_version? | default $resp.crate.max_version?)
+				if ($ver | is-empty) {
+					print $"::warning::⚠️ No versions found for crate ($crate_name)"
+					cd $original_dir
+					$skip_count = $skip_count + 1
+					print "::endgroup::"
+					continue
+				}
+				print $"   Latest crate version: ($ver)"
+				$ver
+			} else if ($pkg_url | str contains "gitlab.com") {
 				print "::warning::⚠️ GitLab support is untested - skipping"
 				cd $original_dir
 				$skip_count = $skip_count + 1
 				print "::endgroup::"
 				continue
-			} else if ($repo_url | str contains "codeberg.org") {
+			} else if ($pkg_url | str contains "codeberg.org") {
 				print "::warning::⚠️ Codeberg support is untested - skipping"
 				cd $original_dir
 				$skip_count = $skip_count + 1
 				print "::endgroup::"
 				continue
-			} else if $repo_url != null {
-				print $"::error::❌ Unsupported git provider: ($repo_url)"
+			} else if $pkg_url != null {
+				print $"::error::❌ Unsupported URL: ($pkg_url)"
 				cd $original_dir
 				$error_count = $error_count + 1
 				print "::endgroup::"
 				continue
 			} else {
-				print $"::error::❌ No repo or update script specified"
+				print $"::error::❌ No url or update script specified"
 				cd $original_dir
 				$error_count = $error_count + 1
 				print "::endgroup::"

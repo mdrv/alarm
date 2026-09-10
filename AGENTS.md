@@ -140,13 +140,21 @@ Each package entry in `update.jsonc` controls how it's built:
 ```jsonc
 {
 	"pkgname": "example",
-	"repo": "https://github.com/owner/repo", // GitHub repo (for auto-updates)
+	"url": "https://github.com/owner/repo", // Upstream URL (for auto-updates)
 	"path": "packages/example", // Path to PKGBUILD directory
 	"arch": ["aarch64"], // Array: ["aarch64"], ["x86_64"], or both
 	"build": true, // true = makepkg, false = copy from prebuilt/
 	"priority": 10 // Lower = built first
 }
 ```
+
+### Version Check Sources (`url`)
+
+`update.nu` dispatches on the `url` value:
+
+- `github.com` — GitHub releases API (stable first, then pre-releases)
+- `crates.io/crates/<name>` — crates.io API (`max_stable_version`, falls back to `max_version`); use this when the GitHub repo is private
+- `update: "<name>"` (instead of `url`) — custom script `updates/<name>.nu` that prints the latest version
 
 ### Architecture Field
 
