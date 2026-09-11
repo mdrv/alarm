@@ -126,8 +126,51 @@ if ($PREBUILT_DIR | path exists) {
 	log warning $"Prebuilt directory not found: ($PREBUILT_DIR)"
 }
 
-# Build packages in priority order
-for pkg in $build_packages {
+# Resolve internal dependencies declared in each PKGBUILD and topologically
+# sort the build order: a package builds only after the repo packages it
+# depends on (priority breaks ties within a dependency wave).
+log info "Resolving internal dependencies..."
+
+let pkg_names = ($packages | get pkgname)
+let dep_map = (
+	$build_packages
+	| each {|pkg|
+		let pkgdir = $"($PACKAGES_DIR)/($pkg.pkgname)"
+		let declared = (
+			do { cd $pkgdir; bash -c 'source ./PKGBUILD >/dev/null 2>&1; echo "${depends[*]} ${makedepends[*]}"' | complete }
+			| get stdout
+			| str trim
+			| split row ' '
+			| uniq
+			| where {|d| $d in $pkg_names }
+		)
+		{ name: $pkg.pkgname, deps: $declared, prio: $pkg.priority }
+	}
+)
+
+mut build_order = []
+mut remaining = $dep_map
+mut satisfied = ($packages | where build == false | get pkgname)
+while ($remaining | is-not-empty) {
+	let sat = $satisfied
+	let ready = (
+		$remaining
+		| each {|e| { name: $e.name, prio: $e.prio, pending: ($e.deps | where {|d| not ($d in $sat) }) } }
+		| where {|e| ($e.pending | is-empty) }
+	)
+	if ($ready | is-empty) {
+		log error $"Unresolvable internal dependencies among: ($remaining | get name | str join ', ')"
+		exit 1
+	}
+	let wave = ($ready | sort-by prio | get name)
+	$build_order = ($build_order | append $wave)
+	$satisfied = ($satisfied | append $wave)
+	$remaining = ($remaining | where {|e| not ($e.name in $wave) })
+}
+
+log info $"Build order: ($build_order | str join ' -> ')"
+
+for pkg in $build_order {
 	let pkgname = $pkg.pkgname
 	let pkgdir = $"($PACKAGES_DIR)/($pkgname)"
 	
@@ -153,21 +196,27 @@ for pkg in $build_packages {
 		continue
 	}
 	
-	# Install the newly built package so dependent packages can find it
+	# Install the freshly built package so packages that declare it as a
+	# dependency (in their PKGBUILD) can build later in this run.
 	let pattern = $pkgname + '-.*\.pkg\.tar\.(zst|xz)$'
 	let pkg_files = (
 		ls $ARCH_DIR
 		| where name =~ $pattern
 		| get name
 	)
-	
-	if ($pkg_files | is-not-empty) and (($pkg_files | length) > 0) {
-		log info $"Installing ($pkg_files) for dependent packages..."
-		try {
-			^pacman -U --noconfirm ...$pkg_files
-		} catch {
-			log warning $"Failed to install ($pkg_files)"
-		}
+
+	if ($pkg_files | is-empty) {
+		log error $"Built package file for ($pkgname) not found in ($ARCH_DIR)"
+		$build_failed = true
+		cd $PACKAGES_DIR
+		continue
+	}
+
+	log info $"Installing ($pkg_files)..."
+	let install_result = (^pacman -U --noconfirm ...$pkg_files | complete)
+	if $install_result.exit_code != 0 {
+		log error $"Failed to install ($pkg_files): ($install_result.stderr)"
+		$build_failed = true
 	}
 	
 	cd $PACKAGES_DIR

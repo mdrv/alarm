@@ -166,6 +166,13 @@ Each package entry in `update.jsonc` controls how it's built:
 
 - **Language**: Nushell (`.nu`)
 - **Architecture**: Controlled via `TARGET_ARCH` environment variable (`aarch64` or `x86_64`)
+- **Dependency resolution**: Internal dependencies are **derived**, not configured — each
+  PKGBUILD's `depends`/`makedepends` is intersected with the repo's package names, and
+  build order is a topological sort (deps first, `priority` as tiebreaker; `build: false`
+  packages count as satisfied). Do not add a `deps` field to `update.jsonc`.
+- **Failure semantics**: missing built artifact or failed `pacman -U` marks the package
+  failed and continues others; the script exits 1 at the end. Unresolvable dependency
+  cycles abort immediately.
 - **Keyring**: Imports `archlinuxarm` keyring for aarch64, `archlinux` for x86_64
 - **Permissions**: Handle UID/GID for container file ownership
 - **Sandbox**: Disable pacman sandbox (`DisableSandbox` in pacman.conf)
