@@ -155,7 +155,10 @@ Each package entry in `update.jsonc` controls how it's built:
 
 `update.nu` dispatches on the `url` value:
 
-- `github.com` — GitHub releases API (stable first, then pre-releases)
+- `github.com` — GitHub releases API (stable first, then pre-releases, then the
+  newest git tag newer than the current version — the tag fallback covers repos
+  that ship tags without GitHub Releases, like opencode v2). Updates never
+  downgrade: a candidate must compare numerically newer than the current pkgver.
 - `crates.io/crates/<name>` — crates.io API (`max_stable_version`, falls back to `max_version`); use this when the GitHub repo is private
 - `update: "<name>"` (instead of `url`) — custom script `updates/<name>.nu` that prints the latest version
 

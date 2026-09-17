@@ -8,6 +8,39 @@ const USER = {
 	EMAIL: "medrivia@gmail.com"
 }
 
+# Numeric comparison of dotted versions: true if a is strictly newer than b
+# (2.0.5 > 1.18.31, 2.0.10 > 2.0.9). Unparseable versions are never newer,
+# so a bad comparison can never trigger a downgrade.
+def ver_gt [a: string, b: string] {
+	let pa = (try { $a | split row '.' | each { into int } } catch { null })
+	let pb = (try { $b | split row '.' | each { into int } } catch { null })
+	if $pa == null or $pb == null {
+		return false
+	}
+	let la = ($pa | length)
+	let lb = ($pb | length)
+	let min = ([$la, $lb] | math min)
+	let cmp = (
+		seq 0 ($min - 1)
+		| each {|i|
+			if (($pa | get $i) > ($pb | get $i)) { 1 } else if (($pa | get $i) < ($pb | get $i)) { -1 } else { 0 }
+		}
+		| where { $in != 0 }
+		| first
+		| default 0
+	)
+	if $cmp != 0 {
+		return ($cmp > 0)
+	}
+	# Equal on the common prefix: longer wins only with a nonzero extra part
+	# (2.0.1 > 2.0, but 2.0.0 == 2.0)
+	let ta = ($pa | skip $min)
+	let tb = ($pb | skip $min)
+	let ta_pos = (if ($ta | is-empty) { false } else { $ta | any {|x| $x > 0 } })
+	let tb_pos = (if ($tb | is-empty) { false } else { $tb | any {|x| $x > 0 } })
+	$ta_pos and (not $tb_pos)
+}
+
 # Main entry point with optional --dry-run flag
 # Main entry point with optional --dry-run flag
 def main [--dry-run] {
@@ -152,7 +185,17 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 				print $"   🔑 Using authenticated GitHub API: ($gh_headers != {})"
 
 
-				# Try stable releases first
+				# Turn a tag into a bare dotted version (v2.0.5 -> 2.0.5)
+				let to_ver = {|t| $t | str replace -r '^[^0-9]+' '' | split row ' ' | get 0 }
+
+				# Candidates in order of preference: newest stable release, then
+				# newest release of any kind (pre-releases), then the newest git
+				# tag newer than the installed version. The tag fallback covers
+				# repos that publish tags without creating GitHub Releases
+				# (e.g. anomalyco/opencode, whose v2.x ships tags only).
+				mut chosen_ver = ""
+
+				# 1) Stable release
 				let latest_api = $"https://api.github.com/repos/($github_repo)/releases/latest"
 				print $"   Trying stable releases: ($latest_api)"
 
@@ -165,8 +208,13 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 					}
 				)
 
-				# If no stable release, try all releases (includes pre-releases)
-				let result = if $latest_result.tag_name == "null" {
+				if $latest_result.tag_name != "null" {
+					$chosen_ver = (do $to_ver $latest_result.tag_name)
+					print $"   Latest release: ($latest_result.tag_name) → version: ($chosen_ver)"
+				}
+
+				# 2) No stable release: newest release of any kind (pre-releases included)
+				if $chosen_ver == "" {
 					print "   ℹ️ No stable release found, checking pre-releases..."
 					let all_api = $"https://api.github.com/repos/($github_repo)/releases"
 					print $"   API URL: ($all_api)"
@@ -180,17 +228,43 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 						}
 					)
 
-					if ($all_result | length) == 0 {
-						{ tag_name: "null" }
-					} else {
-						{ tag_name: ($all_result | get 0.tag_name) }
+					if ($all_result | length) > 0 {
+						$chosen_ver = (do $to_ver ($all_result | get 0.tag_name))
+						print $"   Latest release \(any\): ($all_result | get 0.tag_name) → version: ($chosen_ver)"
 					}
-				} else {
-					print $"   API URL: ($latest_api)"
-					$latest_result
 				}
 
-				if $result.tag_name == "null" {
+				# 3) Release candidate is not newer than the current version:
+				#    scan git tags for something newer (tag-only repos)
+				# Scan only when the candidate is strictly older than the current
+				# version; an equal candidate is already up to date.
+				if ($chosen_ver == "") or (ver_gt $current_ver $chosen_ver) {
+					let tags_api = $"https://api.github.com/repos/($github_repo)/tags?per_page=100"
+					print $"   No newer release, scanning tags: ($tags_api)"
+
+					let tags_result = (
+						try {
+							http get -H $gh_headers $tags_api
+						} catch { |err|
+							print $"   ::warning::⚠️ Tags request failed: ($err.msg)"
+							[]
+						}
+					)
+
+					let newer_tags = (
+						$tags_result
+						| get name
+						| each {|t| do $to_ver $t }
+						| where {|v| ($v =~ '^\d+(\.\d+)+$') and (ver_gt $v $current_ver) }
+					)
+
+					if ($newer_tags | is-not-empty) {
+						$chosen_ver = ($newer_tags | reduce --fold "0" {|acc, v| if (ver_gt $v $acc) { $v } else { $acc } })
+						print $"   Newest tag newer than ($current_ver): ($chosen_ver)"
+					}
+				}
+
+				if $chosen_ver == "" {
 					print $"::warning::⚠️ No releases found for ($pkgname)"
 					cd $original_dir
 					$skip_count = $skip_count + 1
@@ -198,9 +272,7 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 					continue
 				}
 
-				let ver = ($result.tag_name | str replace -r '^[^0-9]+' "" | split row ' ' | get 0)
-				print $"   Latest release: ($result.tag_name) → version: ($ver)"
-				$ver
+				$chosen_ver
 			} else if ($pkg_url | str contains "crates.io/crates/") {
 				let crate_name = ($pkg_url | str replace -r '^.*/crates/' '' | str trim -c '/')
 				let api_url = $"https://crates.io/api/v1/crates/($crate_name)"
@@ -261,9 +333,13 @@ def update_packages [packages: list, dry_run: bool, updated_file: path, script_d
 			continue
 		}
 
-		# Check if already up to date
-		if $new_ver == $current_ver {
-			print $"✅ Already up to date: ($current_ver)"
+		# Check if already up to date (semver-aware: never downgrade)
+		if not (ver_gt $new_ver $current_ver) {
+			if $new_ver == $current_ver {
+				print $"✅ Already up to date: ($current_ver)"
+			} else {
+				print $"✅ Skipping downgrade: found ($new_ver), current ($current_ver) is newer"
+			}
 			cd $original_dir
 			$skip_count = $skip_count + 1
 			print "::endgroup::"
