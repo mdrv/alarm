@@ -62,5 +62,13 @@
 		"arch": ["aarch64", "x86_64"],
 		"build": true,
 		"priority": 10
+	},
+	{
+		"pkgname": "opencode",
+		"url": "https://github.com/anomalyco/opencode",
+		"path": "packages/opencode",
+		"arch": ["aarch64"],
+		"build": true,
+		"priority": 10
 	}
 ]

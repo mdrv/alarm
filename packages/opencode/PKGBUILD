@@ -1,0 +1,44 @@
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
+
+pkgname=opencode
+pkgver=2.0.5
+pkgrel=1
+pkgdesc="The open source coding agent"
+arch=('x86_64' 'aarch64')
+url="https://github.com/anomalyco/opencode"
+license=('MIT')
+depends=('git' 'ripgrep' 'tar')
+makedepends=('bun')
+optdepends=('wl-clipboard: clipboard support on Wayland'
+            'xclip: clipboard support on X11')
+provides=('opencode')
+conflicts=('opencode')
+options=('!debug' '!strip')
+source=("git+$url.git#tag=v$pkgver")
+sha256sums=('SKIP')
+
+prepare() {
+	cd "$pkgname"
+	bun install --frozen-lockfile --ignore-scripts
+}
+
+build() {
+	cd "$pkgname/packages/cli"
+	OPENCODE_VERSION=$pkgver bun run ./script/build.ts --single --baseline --skip-install
+}
+
+package() {
+	cd "$pkgname"
+	case $CARCH in
+	aarch64) dir=cli-linux-arm64 ;;
+	x86_64) dir=cli-linux-x64-baseline ;;
+	esac
+
+	install -Dm755 "packages/cli/dist/$dir/bin/opencode" "$pkgdir/usr/bin/opencode"
+	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+	"$pkgdir/usr/bin/opencode" --completions bash \
+		| install -Dm644 /dev/stdin "$pkgdir/usr/share/bash-completion/completions/opencode"
+	"$pkgdir/usr/bin/opencode" --completions zsh \
+		| install -Dm644 /dev/stdin "$pkgdir/usr/share/zsh/site-functions/_opencode"
+}

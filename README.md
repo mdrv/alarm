@@ -37,6 +37,7 @@ sudo pacman -Syu
 - **bun** - Fast JavaScript runtime, bundler, test runner, and package manager (prebuilt binary from official releases)
 - **f3d** - Fast and minimalist 3D viewer with ray tracing support (prebuilt aarch64 binary)
 - **ospray** - Ray Tracing Based Rendering Engine for High-Fidelity Visualization (prebuilt aarch64 binary from official releases)
+- **opencode** - AI coding agent for the terminal
 - **runit** - UNIX init scheme with service supervision
 - **surrealdb** - Scalable, distributed, collaborative document-graph database
 - **tofi** - Tiny rofi / dmenu replacement for wlroots-based Wayland compositors

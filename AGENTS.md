@@ -118,6 +118,9 @@ Audit rules (verified against real binaries via `readelf -d <elf> | grep NEEDED`
 - Located in `packages/<name>/`
 - Directory name matches `pkgname` exactly
 - Only PKGBUILD and LICENSE files (no source tarballs)
+- Every package directory carries the canonical `.gitignore`: ignore everything
+  (`/*`), whitelist `.gitignore`, `PKGBUILD`, `.SRCINFO` — plus `LICENSE` when the
+  package commits one (bun, caddy-mdrv, surrealdb, tofi)
 - Use lowercase, hyphen-separated names
 
 ### Version Updates
