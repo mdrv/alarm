@@ -171,7 +171,8 @@ while ($remaining | is-not-empty) {
 log info $"Build order: ($build_order | str join ' -> ')"
 
 for pkg in $build_order {
-	let pkgname = $pkg.pkgname
+	# $build_order holds package names (strings), not config records
+	let pkgname = $pkg
 	let pkgdir = $"($PACKAGES_DIR)/($pkgname)"
 	
 	log info $"Building: ($pkgname)"
