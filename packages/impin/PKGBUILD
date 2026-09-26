@@ -1,0 +1,25 @@
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
+pkgname=impin
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Wayland layer-shell overlay pinning reference images above your canvas: drag, zoom, pan, opacity"
+arch=('x86_64' 'aarch64')
+url="https://github.com/mdrv/impin"
+license=('MIT')
+depends=('wayland' 'libxkbcommon' 'fontconfig')
+provides=("impin")
+conflicts=("impin")
+source_x86_64=("${pkgname}-${pkgver}-x86_64-unknown-linux-gnu.tar.gz::https://github.com/mdrv/${pkgname}/releases/download/v${pkgver}/${pkgname}-v${pkgver}-x86_64-unknown-linux-gnu.tar.gz")
+source_aarch64=("${pkgname}-${pkgver}-aarch64-unknown-linux-gnu.tar.gz::https://github.com/mdrv/${pkgname}/releases/download/v${pkgver}/${pkgname}-v${pkgver}-aarch64-unknown-linux-gnu.tar.gz")
+sha256sums_x86_64=('bf532a140066249e320e8f0b2a293f4a4ef88bb8a28ba98cc124bf266ecc04be')
+sha256sums_aarch64=('9507e03fd581575b67e0afa783b4a6e70634d9d36456328826014f06fd9149a5')
+
+# Prebuilt release binaries — no compilation here (upstream builds in the
+# release workflow on Arch containers).
+package() {
+	cd "${srcdir}/${pkgname}"
+	install -Dm755 "${pkgname}" "${pkgdir}/usr/bin/${pkgname}"
+	install -Dm644 "impin.desktop" "${pkgdir}/usr/share/applications/${pkgname}.desktop"
+	install -Dm644 "README.md" "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+	install -Dm644 "LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}

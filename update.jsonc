@@ -94,5 +94,13 @@
 		"arch": ["aarch64", "x86_64"],
 		"build": true,
 		"priority": 10
+	},
+	{
+		"pkgname": "impin",
+		"url": "https://github.com/mdrv/impin",
+		"path": "packages/impin",
+		"arch": ["aarch64", "x86_64"],
+		"build": true,
+		"priority": 10
 	}
 ]
