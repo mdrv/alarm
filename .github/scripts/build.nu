@@ -96,6 +96,13 @@ log info $"Packages: ($packages | get pkgname | str join ', ')"
 
 # Separate into build and prebuilt lists
 let build_packages = ($packages | where build == true)
+
+# Entries whose package directory does not exist (yet) are skipped with a
+# warning instead of crashing the whole pipeline — a package can be announced
+# in update.jsonc before its PKGBUILD lands in packages/.
+let missing_dirs = ($build_packages | where {|pkg| not (($PACKAGES_DIR + '/' + $pkg.pkgname) | path exists) })
+let build_packages = ($build_packages | where {|pkg| (($PACKAGES_DIR + '/' + $pkg.pkgname) | path exists) })
+$missing_dirs | each {|pkg| log warning $"Package dir not found, skipping build: ($pkg.pkgname)" }
 let prebuilt_packages = ($packages | where build == false)
 
 log info $"Prebuilt packages: ($prebuilt_packages | length)"
