@@ -1,5 +1,5 @@
-# Maintainer (aarch64): mdrv <medrivia@gmail.com>
-# Maintainer (x86_64): mdrv <medrivia@gmail.com>
+# Maintainer (aarch64): Umar Alfarouk <medrivia@gmail.com>
+# Maintainer (x86_64): Umar Alfarouk <medrivia@gmail.com>
 pkgname=mdrv-bt
 pkgver=0.1.0
 pkgrel=1
