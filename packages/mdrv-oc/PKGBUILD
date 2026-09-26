@@ -1,9 +1,9 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 
 pkgname=mdrv-oc
-pkgver=0.1.2
+pkgver=0.2.0
 pkgrel=1
-pkgdesc="OpenCode session database manager (list, move, export/import, inspect sessions)"
+pkgdesc="OpenCode session database manager (list, move, export/import/sync, inspect sessions)"
 arch=('x86_64' 'aarch64')
 url="https://github.com/mdrv/mdrv-oc"
 license=('MIT')
@@ -12,10 +12,12 @@ options=('!debug' '!lto')
 # NEEDED entries, so there is nothing to depend on.
 source=("mdrv-oc-LICENSE::https://raw.githubusercontent.com/mdrv/mdrv-oc/main/LICENSE")
 sha256sums=('eed271e5501e1ff8db061905825be86dceb17027004fccf29b2d46820b3e8423')
-source_x86_64=("$pkgname-$pkgver-linux-x86_64.tar.gz::$url/releases/download/v$pkgver/mdrv-oc-$pkgver-linux-x86_64.tar.gz")
-sha256sums_x86_64=('85d23e9dbc2aa0880fd8985fee5d84a75a36646052adf297b1b0b173fd976579')
-source_aarch64=("$pkgname-$pkgver-linux-aarch64.tar.gz::$url/releases/download/v$pkgver/mdrv-oc-$pkgver-linux-aarch64.tar.gz")
-sha256sums_aarch64=('86ec15cd6b6259079917662bde41ed82d7746fec0b2bcb1d783501f8ca0f38f1')
+# Upstream asset names embed the full tag (including the leading v):
+# mdrv-oc-v0.2.0-<rust-target>.tar.gz
+source_x86_64=("$pkgname-$pkgver-linux-x86_64.tar.gz::$url/releases/download/v$pkgver/mdrv-oc-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
+sha256sums_x86_64=('fdda04bfeb1a1c2f94bac83cd10217c6056433a83693641f08b8e79d495b502d')
+source_aarch64=("$pkgname-$pkgver-linux-aarch64.tar.gz::$url/releases/download/v$pkgver/mdrv-oc-v$pkgver-aarch64-unknown-linux-musl.tar.gz")
+sha256sums_aarch64=('75ef58d14e0d02c179f784625046365577ee462b61d1daad99db6548c231004e')
 
 package() {
   cd "$pkgname"
