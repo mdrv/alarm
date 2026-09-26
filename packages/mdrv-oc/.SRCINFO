@@ -1,0 +1,18 @@
+pkgbase = mdrv-oc
+	pkgdesc = OpenCode session database manager (list, move, export/import, inspect sessions)
+	pkgver = 0.1.0
+	pkgrel = 1
+	url = https://github.com/mdrv/mdrv-oc
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	options = !debug
+	options = !lto
+	source = mdrv-oc-LICENSE::https://raw.githubusercontent.com/mdrv/mdrv-oc/main/LICENSE
+	sha256sums = eed271e5501e1ff8db061905825be86dceb17027004fccf29b2d46820b3e8423
+	source_x86_64 = mdrv-oc-0.1.0-linux-x86_64.tar.gz::https://github.com/mdrv/mdrv-oc/releases/download/v0.1.0/mdrv-oc-0.1.0-linux-x86_64.tar.gz
+	sha256sums_x86_64 = 2d60872d5a05fde678f31349aa4ae557fda6a338c5fe3cb4d3e6dea7ffcc974e
+	source_aarch64 = mdrv-oc-0.1.0-linux-aarch64.tar.gz::https://github.com/mdrv/mdrv-oc/releases/download/v0.1.0/mdrv-oc-0.1.0-linux-aarch64.tar.gz
+	sha256sums_aarch64 = 3e28e7ee50768c4941f2bd664850f3fb54f14d224f8a810d675e822a9c028a9a
+
+pkgname = mdrv-oc
