@@ -78,5 +78,21 @@
 		"arch": ["aarch64"],
 		"build": true,
 		"priority": 10
+	},
+	{
+		"pkgname": "mdrv-bt",
+		"url": "https://github.com/mdrv/mdrv-bt",
+		"path": "packages/mdrv-bt",
+		"arch": ["x86_64"],
+		"build": true,
+		"priority": 10
+	},
+	{
+		"pkgname": "upperadd",
+		"url": "https://github.com/mdrv/upperadd",
+		"path": "packages/upperadd",
+		"arch": ["aarch64", "x86_64"],
+		"build": true,
+		"priority": 10
 	}
 ]

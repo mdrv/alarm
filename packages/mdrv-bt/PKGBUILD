@@ -1,0 +1,24 @@
+# Maintainer (aarch64): mdrv <medrivia@gmail.com>
+# Maintainer (x86_64): mdrv <medrivia@gmail.com>
+pkgname=mdrv-bt
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Sync Windows Bluetooth pairing keys into the BlueZ store (dual-boot, no re-pairing)"
+# aarch64 joins when the upstream release ships that asset (see release.yml).
+arch=('x86_64')
+url="https://github.com/mdrv/mdrv-bt"
+license=('MIT')
+depends=()
+optdepends=('bluez: verify against the running bluetoothd'
+            'sudo: apply runs as root')
+options=(!debug)
+source_x86_64=("$url/releases/download/v$pkgver/mdrv-bt-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
+sha256sums_x86_64=('f8337b95be52b74a19a477574408aa02ddd6345ad3d7e743716dbad93881224d')
+
+package() {
+	cd "${srcdir}/mdrv-bt"
+	install -Dm755 mdrv-bt "${pkgdir}/usr/bin/mdrv-bt"
+	install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+	install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+}
+# vim:set noet sts=0 sw=4 ts=4:

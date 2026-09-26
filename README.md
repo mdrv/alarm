@@ -48,6 +48,7 @@ sudo pacman -Syu
 
 - **bun** - Fast JavaScript runtime, bundler, test runner, and package manager
 - **caddy-mdrv** - Caddy web server with extra modules
+- **mdrv-bt** - Sync Windows Bluetooth pairing keys into the BlueZ store (dual-boot, no re-pairing; static musl binary from GitHub releases)
 - **mdrv-oc** - OpenCode session database manager (list, move, export/import, inspect sessions)
 - **surrealdb** - Scalable, distributed, collaborative document-graph database
 - **turso** - In-process SQL database engine compatible with SQLite
