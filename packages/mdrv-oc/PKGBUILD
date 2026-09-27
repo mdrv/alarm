@@ -1,7 +1,7 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 
 pkgname=mdrv-oc
-pkgver=0.2.1
+pkgver=0.2.2
 pkgrel=1
 pkgdesc="OpenCode session database manager (list, move, export/import/sync, inspect sessions)"
 arch=('x86_64' 'aarch64')
@@ -15,9 +15,9 @@ sha256sums=('eed271e5501e1ff8db061905825be86dceb17027004fccf29b2d46820b3e8423')
 # Upstream asset names embed the full tag (including the leading v):
 # mdrv-oc-v0.2.0-<rust-target>.tar.gz
 source_x86_64=("$pkgname-$pkgver-linux-x86_64.tar.gz::$url/releases/download/v$pkgver/mdrv-oc-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
-sha256sums_x86_64=('3417d07995d05deb0e6602ffa1cbab3d7a6f7ea6dd32dae4171e8c6dbf138e2b')
+sha256sums_x86_64=('7920735e47f664d3d42c4cd41d0474d8bf5318987e0cee4d0d193d81ee407cf0')
 source_aarch64=("$pkgname-$pkgver-linux-aarch64.tar.gz::$url/releases/download/v$pkgver/mdrv-oc-v$pkgver-aarch64-unknown-linux-musl.tar.gz")
-sha256sums_aarch64=('ebc4e11bafbc7e33dca4060031f2f69a5a02c4e125b61e96530c3cc4c7edc177')
+sha256sums_aarch64=('eb80a3fdb426520b4bb2c3438e1532145b3d1cf6532668a8675da9bcf697f2fb')
 
 package() {
   cd "$pkgname"
