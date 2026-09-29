@@ -1,0 +1,27 @@
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
+
+_pkgname=mdrvserve
+pkgname=mdrvserve
+pkgver=267.5.0
+pkgrel=1
+pkgdesc="Markdown preview server for AI coding agents (live reload, themes, Typst/Mermaid/D2/LaTeX)"
+arch=('x86_64' 'aarch64')
+url="https://github.com/mdrv/mdrvserve"
+license=('MIT')
+depends=()
+options=('!debug')
+source_x86_64=("$_pkgname-$pkgver-x86_64-musl.tar.gz::https://github.com/mdrv/$_pkgname/releases/download/v$pkgver/$_pkgname-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
+source_aarch64=("$_pkgname-$pkgver-aarch64-musl.tar.gz::https://github.com/mdrv/$_pkgname/releases/download/v$pkgver/$_pkgname-v$pkgver-aarch64-unknown-linux-musl.tar.gz")
+# TODO: fill after the v267.5.0 release is live: `updpkgsums` (or `makepkg -g`)
+sha256sums_x86_64=('999bbb37dc80a8872feda4bc7e96f5eedc4810eae0f41d8733dfd77b9ee34a09')
+sha256sums_aarch64=('28b6879208183a6e44a91f1e2fad06b9bd4ca28b91797a65dea070daa0e9cd1a')
+
+package() {
+  cd "$srcdir"/$_pkgname-v$pkgver-*-musl
+
+  # Fully static musl binary
+  install -Dm755 mdrvserve "$pkgdir/usr/bin/mdrvserve"
+
+  # License (shipped in the archive)
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$_pkgname/LICENSE"
+}

@@ -38,6 +38,7 @@ sudo pacman -Syu
 - **f3d** - Fast and minimalist 3D viewer with ray tracing support (prebuilt aarch64 binary)
 - **impin** - Floating reference-image pins above your canvas: drag, zoom, pan, opacity (prebuilt binary from GitHub releases)
 - **mdrv-oc** - OpenCode session database manager (list, move, export/import, inspect sessions)
+- **mdrvserve** - Markdown preview server for AI coding agents (live reload; static musl binary from GitHub releases)
 - **ospray** - Ray Tracing Based Rendering Engine for High-Fidelity Visualization (prebuilt aarch64 binary from official releases)
 - **opencode** - AI coding agent for the terminal
 - **runit** - UNIX init scheme with service supervision
@@ -53,6 +54,7 @@ sudo pacman -Syu
 - **impin** - Floating reference-image pins above your canvas: drag, zoom, pan, opacity (prebuilt binary from GitHub releases)
 - **mdrv-bt** - Sync Windows Bluetooth pairing keys into the BlueZ store (dual-boot, no re-pairing; static musl binary from GitHub releases)
 - **mdrv-oc** - OpenCode session database manager (list, move, export/import, inspect sessions)
+- **mdrvserve** - Markdown preview server for AI coding agents (live reload; static musl binary from GitHub releases)
 - **surrealdb** - Scalable, distributed, collaborative document-graph database
 - **turso** - In-process SQL database engine compatible with SQLite
 - **upperadd** - Wayland layer-shell overlay to jump into markdown notes (prebuilt binary from GitHub releases)
