@@ -110,10 +110,5 @@
 		"arch": ["aarch64", "x86_64"],
 		"build": true,
 		"priority": 10
-	},
-	{
-		"arch": ["aarch64", "x86_64"],
-		"build": true,
-		"priority": 10
 	}
 ]
