@@ -1,34 +1,29 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 
+_pkgname=mdrv-db
 pkgname=mdrv-db
 pkgver=0.6.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Fjall durability envelope around a SQL data port and content-addressed blob store (fleet CLI)"
 arch=('x86_64' 'aarch64')
-url="https://crates.io/crates/mdrv-db"
+url="https://github.com/mdrv/mdrv-db"
 license=('MIT')
-depends=('libgcc')
-makedepends=('cargo')
-source=("$pkgname-$pkgver.crate::https://static.crates.io/crates/mdrv-db/mdrv-db-$pkgver.crate")
-sha256sums=('5b904477e36e8dd7f0226585d87865d692d159af1b221b7f210bca662e19e86f')
-options=('!debug' '!lto')
-
-build() {
-  cd "$pkgname-$pkgver"
-  cargo build --release --locked
-}
+depends=()
+options=('!debug')
+source_x86_64=("$_pkgname-$pkgver-x86_64-musl.tar.gz::https://github.com/mdrv/$_pkgname/releases/download/v$pkgver/$_pkgname-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
+source_aarch64=("$_pkgname-$pkgver-aarch64-musl.tar.gz::https://github.com/mdrv/$_pkgname/releases/download/v$pkgver/$_pkgname-v$pkgver-aarch64-unknown-linux-musl.tar.gz")
+sha256sums_x86_64=('9a299be4d7fa6adea69ffd0a35bde3ade2ab2b198df4f9df71a1602d6f65a97f')
+sha256sums_aarch64=('6118a45bd7bd5be699ae93c97e1adb26bd22de7d0c4d46073017a0caae2cf087')
 
 package() {
-  cd "$pkgname-$pkgver"
-  install -Dm755 target/release/mdrv-db "$pkgdir/usr/bin/mdrv-db"
-  ./target/release/mdrv-db completion > mdrv-db.yaml
-  install -Dm644 mdrv-db.yaml "$pkgdir/usr/share/carapace/specs/mdrv-db.yaml"
-  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
-  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-}
+  cd "$srcdir"/$_pkgname-v$pkgver-*-musl
 
-post_install() {
-  echo "==> carapace-bin loads user specs ONLY from ~/.config/carapace/specs"
-  echo "==> (the /usr/share copy is not read as of carapace-bin 1.7.3)."
-  echo "==> Enable completions:  mdrv-db completion install"
+  # Fully static musl binary
+  install -Dm755 mdrv-db "$pkgdir/usr/bin/mdrv-db"
+
+  # Carapace completion spec (shipped in the tarball, matches `mdrv-db completion`)
+  install -Dm644 mdrv-db.yaml "$pkgdir/usr/share/carapace/specs/mdrv-db.yaml"
+
+  # License
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$_pkgname/LICENSE"
 }

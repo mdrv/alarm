@@ -57,7 +57,7 @@
 	},
 	{
 		"pkgname": "mdrv-db",
-		"url": "https://crates.io/crates/mdrv-db",
+		"url": "https://github.com/mdrv/mdrv-db",
 		"path": "packages/mdrv-db",
 		"arch": ["aarch64", "x86_64"],
 		"build": true,

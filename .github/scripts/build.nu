@@ -199,6 +199,9 @@ for pkg in $build_order {
 	
 	if $result.exit_code != 0 {
 		log warning $"Failed to build ($pkgname)"
+		# Dump makepkg output so the failure cause is visible in CI logs
+		print $"--- makepkg stdout for ($pkgname) ---(char newline)($result.stdout)"
+		print $"--- makepkg stderr for ($pkgname) ---(char newline)($result.stderr)"
 		$build_failed = true
 		cd $PACKAGES_DIR
 		continue
