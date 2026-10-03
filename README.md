@@ -43,6 +43,7 @@ sudo pacman -Syu
 - **opencode** - AI coding agent for the terminal
 - **runit** - UNIX init scheme with service supervision
 - **surrealdb** - Scalable, distributed, collaborative document-graph database
+- **suemo** - Personal schedule + activity record: engine daemon, CLI, and full-screen GPUI overlay (prebuilt binary from GitHub releases)
 - **tofi** - Tiny rofi / dmenu replacement for wlroots-based Wayland compositors
 - **turso** - In-process SQL database engine compatible with SQLite
 - **upperadd** - Wayland layer-shell overlay to jump into markdown notes (prebuilt binary from GitHub releases)
@@ -56,6 +57,7 @@ sudo pacman -Syu
 - **mdrv-oc** - OpenCode session database manager (list, move, export/import, inspect sessions)
 - **mdrvserve** - Markdown preview server for AI coding agents (live reload; static musl binary from GitHub releases)
 - **surrealdb** - Scalable, distributed, collaborative document-graph database
+- **suemo** - Personal schedule + activity record: engine daemon, CLI, and full-screen GPUI overlay (prebuilt binary from GitHub releases)
 - **turso** - In-process SQL database engine compatible with SQLite
 - **upperadd** - Wayland layer-shell overlay to jump into markdown notes (prebuilt binary from GitHub releases)
 
