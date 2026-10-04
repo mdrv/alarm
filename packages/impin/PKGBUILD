@@ -1,6 +1,6 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 pkgname=impin
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Wayland layer-shell overlay pinning reference images above your canvas: drag, zoom, pan, opacity"
 arch=('x86_64' 'aarch64')
@@ -11,8 +11,8 @@ provides=("impin")
 conflicts=("impin")
 source_x86_64=("${pkgname}-${pkgver}-x86_64-unknown-linux-gnu.tar.gz::https://github.com/mdrv/${pkgname}/releases/download/v${pkgver}/${pkgname}-v${pkgver}-x86_64-unknown-linux-gnu.tar.gz")
 source_aarch64=("${pkgname}-${pkgver}-aarch64-unknown-linux-gnu.tar.gz::https://github.com/mdrv/${pkgname}/releases/download/v${pkgver}/${pkgname}-v${pkgver}-aarch64-unknown-linux-gnu.tar.gz")
-sha256sums_x86_64=('bf532a140066249e320e8f0b2a293f4a4ef88bb8a28ba98cc124bf266ecc04be')
-sha256sums_aarch64=('9507e03fd581575b67e0afa783b4a6e70634d9d36456328826014f06fd9149a5')
+sha256sums_x86_64=('c117a253c135c0b4ec60669d65044077cccaf840f6834e98db93a296ddc6f8fe')
+sha256sums_aarch64=('458576417019bc1135e384860327d236555ecfebef0416ea58cb308106de9373')
 
 # Prebuilt release binaries — no compilation here (upstream builds in the
 # release workflow on Arch containers).

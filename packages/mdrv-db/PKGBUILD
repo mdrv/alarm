@@ -2,7 +2,7 @@
 
 _pkgname=mdrv-db
 pkgname=mdrv-db
-pkgver=0.6.0
+pkgver=0.6.1
 pkgrel=2
 pkgdesc="Fjall durability envelope around a SQL data port and content-addressed blob store (fleet CLI)"
 arch=('x86_64' 'aarch64')
@@ -12,8 +12,8 @@ depends=()
 options=('!debug')
 source_x86_64=("$_pkgname-$pkgver-x86_64-musl.tar.gz::https://github.com/mdrv/$_pkgname/releases/download/v$pkgver/$_pkgname-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
 source_aarch64=("$_pkgname-$pkgver-aarch64-musl.tar.gz::https://github.com/mdrv/$_pkgname/releases/download/v$pkgver/$_pkgname-v$pkgver-aarch64-unknown-linux-musl.tar.gz")
-sha256sums_x86_64=('9a299be4d7fa6adea69ffd0a35bde3ade2ab2b198df4f9df71a1602d6f65a97f')
-sha256sums_aarch64=('6118a45bd7bd5be699ae93c97e1adb26bd22de7d0c4d46073017a0caae2cf087')
+sha256sums_x86_64=('59a73c728be12957a240d76eff7c7e38cfb83d62d801422a405e3bc1b612d0d9')
+sha256sums_aarch64=('00baf30cdaed9248f9072e8d95bd1bb5f5eece8359cf1970deadf6be2fd7a803')
 
 package() {
   cd "$srcdir"/$_pkgname-v$pkgver-*-musl
