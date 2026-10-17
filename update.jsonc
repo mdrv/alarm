@@ -96,6 +96,14 @@
 		"priority": 10
 	},
 	{
+		"pkgname": "mdrv-tuya",
+		"url": "https://github.com/mdrv/mdrv-tuya",
+		"path": "packages/mdrv-tuya",
+		"arch": ["aarch64", "x86_64"],
+		"build": true,
+		"priority": 10
+	},
+	{
 		"pkgname": "upperadd",
 		"url": "https://github.com/mdrv/upperadd",
 		"path": "packages/upperadd",
