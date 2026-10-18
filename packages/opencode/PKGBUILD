@@ -1,7 +1,7 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 
 pkgname=opencode
-pkgver=2.0.26
+pkgver=2.0.32
 pkgrel=1
 pkgdesc="The open source coding agent"
 arch=('x86_64' 'aarch64')
@@ -15,7 +15,7 @@ provides=('opencode')
 conflicts=('opencode')
 options=('!debug' '!strip')
 source=("git+$url.git#tag=v$pkgver")
-sha256sums=('1835787d7c6dbc72ad55401c51bc181de3637a2676e6d29250ba3365835aabdc')
+sha256sums=('996d4a7332032fa91710eba9d84b778b5fc6c98d09cc016232eb73b08bcccd53')
 
 prepare() {
 	cd "$pkgname"
