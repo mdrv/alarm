@@ -1,7 +1,7 @@
 # Maintainer (aarch64): Umar Alfarouk <medrivia@gmail.com>
 # Maintainer (x86_64): Umar Alfarouk <medrivia@gmail.com>
 pkgname=mdrv-tuya
-pkgver=0.0.3
+pkgver=0.0.4
 pkgrel=1
 pkgdesc="Self-hosted BLE daemon + live web UI for Tuya smart lamps (in-lite INSM044), no cloud"
 arch=('x86_64' 'aarch64')
@@ -10,9 +10,9 @@ license=('MIT')
 depends=('bluez' 'dbus' 'libgcc')
 options=(!debug)
 source_x86_64=("$url/releases/download/v$pkgver/mdrv-tuya-v$pkgver-x86_64-unknown-linux-gnu.tar.gz")
-sha256sums_x86_64=('1a4823d94cc321ee549592dd59292b7ee8156fe2af5b326fd768220d99be55a4')
+sha256sums_x86_64=('6ebf9213d924b24bc0aa3d5fa7de05dc8543e73df49ae03ced7bf0a53b548ee5')
 source_aarch64=("$url/releases/download/v$pkgver/mdrv-tuya-v$pkgver-aarch64-unknown-linux-gnu.tar.gz")
-sha256sums_aarch64=('7d7024d87e5fa6951dd82b867b4dd5f82ebe5e6b79f8920195e6ef957c681971')
+sha256sums_aarch64=('f90a7528a0c9267fb3101ac5ab6e482f6a6205115949a887df2b712fe57e7f94')
 
 # gnu binaries (bluer links libdbus, so musl-static is not practical)
 package() {
