@@ -1,0 +1,33 @@
+# Maintainer: Umar Alfarouk <medrivia@gmail.com>
+
+pkgname=herdr-oc-quota
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="GLM / Z.AI Coding Plan quota indicator for the Herdr tab bar"
+arch=('x86_64' 'aarch64')
+url="https://github.com/mdrv/herdr-oc-quota"
+license=('MIT')
+options=('!debug' '!lto')
+# Upstream releases are fully static musl builds: readelf -d shows no
+# NEEDED entries, so there is nothing to depend on. Tarballs carry the
+# binary, README.md, and LICENSE.
+source_x86_64=("$pkgname-$pkgver-linux-x86_64.tar.gz::$url/releases/download/v$pkgver/herdr-oc-quota-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
+source_aarch64=("$pkgname-$pkgver-linux-aarch64.tar.gz::$url/releases/download/v$pkgver/herdr-oc-quota-v$pkgver-aarch64-unknown-linux-musl.tar.gz")
+sha256sums_x86_64=('3b213c7a5b09d9db0ccd44f09c933e7406e60d70f4d80a40c472e97bb252cb91')
+sha256sums_aarch64=('4de1aa716507f8636806f0fc01185d92e7ef6d4e6da3b0a192f384bbf3c1cd41')
+
+package() {
+  cd "$pkgname"
+  install -Dm755 herdr-oc-quota "$pkgdir/usr/bin/herdr-oc-quota"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+post_install() {
+  cat <<'EOF'
+==> Wire into Herdr's tab bar (~/.config/herdr/config.toml):
+==>   [ui]
+==>   tab_bar_right = [ { type = "command", command = "/usr/bin/herdr-oc-quota status", interval_seconds = 30, timeout_seconds = 25 } ]
+==> Optional tuning: ~/.config/herdr/oc-quota.toml (see /usr/share/doc/herdr-oc-quota/README.md)
+EOF
+}

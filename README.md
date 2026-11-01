@@ -36,6 +36,7 @@ sudo pacman -Syu
 
 - **bun** - Fast JavaScript runtime, bundler, test runner, and package manager (prebuilt binary from official releases)
 - **f3d** - Fast and minimalist 3D viewer with ray tracing support (prebuilt aarch64 binary)
+- **herdr-oc-quota** - GLM / Z.AI Coding Plan quota indicator for the Herdr tab bar (prebuilt static musl binary from GitHub releases)
 - **impin** - Floating reference-image pins above your canvas: drag, zoom, pan, opacity (prebuilt binary from GitHub releases)
 - **mdrv-oc** - OpenCode session database manager (list, move, export/import, inspect sessions)
 - **mdrvserve** - Markdown preview server for AI coding agents (live reload; static musl binary from GitHub releases)
@@ -53,6 +54,7 @@ sudo pacman -Syu
 
 - **bun** - Fast JavaScript runtime, bundler, test runner, and package manager
 - **caddy-mdrv** - Caddy web server with extra modules
+- **herdr-oc-quota** - GLM / Z.AI Coding Plan quota indicator for the Herdr tab bar (prebuilt static musl binary from GitHub releases)
 - **impin** - Floating reference-image pins above your canvas: drag, zoom, pan, opacity (prebuilt binary from GitHub releases)
 - **mdrv-bt** - Sync Windows Bluetooth pairing keys into the BlueZ store (dual-boot, no re-pairing; static musl binary from GitHub releases)
 - **mdrv-oc** - OpenCode session database manager (list, move, export/import, inspect sessions)
