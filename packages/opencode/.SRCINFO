@@ -1,6 +1,6 @@
 pkgbase = opencode
 	pkgdesc = The open source coding agent
-	pkgver = 2.2.0
+	pkgver = 2.2.5
 	pkgrel = 1
 	url = https://github.com/anomalyco/opencode
 	arch = x86_64
@@ -16,7 +16,7 @@ pkgbase = opencode
 	conflicts = opencode
 	options = !debug
 	options = !strip
-	source = git+https://github.com/anomalyco/opencode.git#tag=v2.2.0
-	sha256sums = c1abb8cdf84fa82c70dd981331563407f5947e67a9875c97c05938cb13e915af
+	source = git+https://github.com/anomalyco/opencode.git#tag=v2.2.5
+	sha256sums = 05fe6c9b9b439c082fab8c55104e710d53239c3ad3d553781038024e81912755
 
 pkgname = opencode
