@@ -1,9 +1,9 @@
 # Maintainer: Umar Alfarouk <medrivia@gmail.com>
 
 pkgname=mdrv-oc
-pkgver=0.2.3
+pkgver=0.2.4
 pkgrel=1
-pkgdesc="OpenCode session database manager (list, move, export/import/sync, inspect sessions)"
+pkgdesc="OpenCode session manager: inspect/move/export/import sessions, prompt scheduler + daemon"
 arch=('x86_64' 'aarch64')
 url="https://github.com/mdrv/mdrv-oc"
 license=('MIT')
@@ -12,8 +12,8 @@ options=('!debug' '!lto')
 # NEEDED entries, so there is nothing to depend on.
 source=("mdrv-oc-LICENSE::https://raw.githubusercontent.com/mdrv/mdrv-oc/main/LICENSE")
 sha256sums=('eed271e5501e1ff8db061905825be86dceb17027004fccf29b2d46820b3e8423')
-sha256sums_x86_64=('2a636b413997fc2783937517e31ad255377bc98f3a662ea5e88837805b7758bd')
-sha256sums_aarch64=('51f7e4a91a8f3528ceb611e721416d7fd8e25531a97666d26109b6cef36b3a59')
+sha256sums_x86_64=('3df9c7b054a5b8fad144d38abcb2d3c3a98a52d6b88585ff023d4794072fd78c')
+sha256sums_aarch64=('8c9d7acb6f71b8c8842f62cb9e2847546b0cd8e7a6e4232fc460a8757d64566c')
 # Upstream asset names embed the full tag (including the leading v):
 # mdrv-oc-v0.2.0-<rust-target>.tar.gz
 source_x86_64=("$pkgname-$pkgver-linux-x86_64.tar.gz::$url/releases/download/v$pkgver/mdrv-oc-v$pkgver-x86_64-unknown-linux-musl.tar.gz")
