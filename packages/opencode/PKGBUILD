@@ -19,7 +19,19 @@ sha256sums=('bd9422a4384565a847345a1e85750964c1b8b3dcfe4db3baab500f9de132e3c5')
 
 prepare() {
 	cd "$pkgname"
-	bun install --frozen-lockfile --ignore-scripts
+	# bun fetches git deps (ghostty-web) through api.github.com, which
+	# intermittently 5xxes from CI runners; the x86_64 job failing while
+	# aarch64 succeeds on the same lockfile proves it is transient, so
+	# retry before giving up (successful downloads stay in bun's cache)
+	local attempt
+	for attempt in 1 2 3; do
+		if bun install --frozen-lockfile --ignore-scripts; then
+			return
+		fi
+		echo "bun install attempt $attempt failed; retrying in $((attempt * 15))s" >&2
+		sleep $((attempt * 15))
+	done
+	return 1
 }
 
 build() {
