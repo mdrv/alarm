@@ -3,7 +3,7 @@
 # Contributor: tee < teeaur at duck dot com >
 # Contributor: tblFlip <root@tblflip.de>
 pkgname=surrealdb
-pkgver=3.3.5
+pkgver=4.0.0
 pkgrel=2
 pkgdesc="A scalable, distributed, collaborative, document-graph database, for the realtime web"
 arch=('x86_64' 'aarch64')
@@ -15,8 +15,8 @@ source_x86_64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-amd64.tgz")
 source_aarch64=("$url/v${pkgver//_/-}/surreal-v${pkgver//_/-}.linux-arm64.tgz")
 options=(!debug)
 sha256sums=('98a94ac615f88370865016487b436fa404560910bd329794ed7502277a94b805')
-sha256sums_x86_64=('8f3bc163405085343fc6db9746a8e0cd55503c939802ad2b35a466675a9c09cf')
-sha256sums_aarch64=('de945afaf48660a0d7370d7f631dc964a4cceb46b9cfe0c92ede9061df4cc5e6')
+sha256sums_x86_64=('e910760179b9f13d0773ce98ac50f9a537051156365239284c2dc687adf3049d')
+sha256sums_aarch64=('3d0feff9c3b56a05f168175bd1585e144093c36e740c32c40cf6e51d3466b81c')
 
 package() {
 	install -Dm644 "${srcdir}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
